@@ -1,0 +1,206 @@
+:root {
+    --primary: #1a237e;
+    --primary-light: #534bae;
+    --accent: #2e7d32;
+    --bg-color: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-color: #111111;
+    --subtext-color: #555555;
+    --border-color: #d1d5db;
+    --radius: 12px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family:
+        system-ui,
+        -apple-system,
+        sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-size: 18px; /* Tamaño de letra aumentado para accesibilidad */
+    line-height: 1.5;
+}
+
+.navbar {
+    background-color: var(--primary);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-area h1 {
+    font-size: 1.4rem;
+}
+
+.role-badge {
+    font-size: 0.75rem;
+    background: var(--primary-light);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.actions-area {
+    display: flex;
+    gap: 8px;
+}
+
+.icon-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.wallet-card {
+    background: linear-gradient(135deg, #1a237e, #283593);
+    color: white;
+    padding: 1.2rem;
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.wallet-label {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+#user-balance {
+    font-size: 1.6rem;
+    font-weight: bold;
+}
+
+.btn-withdraw {
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.channels-section h3 {
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+}
+
+.channels-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 1.2rem;
+}
+
+.channel-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius);
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.channel-card.active {
+    border-color: var(--primary);
+    background-color: #e8eaf6;
+}
+
+.chan-icon {
+    font-size: 1.8rem;
+}
+
+.chan-text strong {
+    display: block;
+    font-size: 0.95rem;
+}
+
+.chan-text small {
+    color: var(--subtext-color);
+    font-size: 0.8rem;
+}
+
+.workspace-card {
+    background: var(--card-bg);
+    padding: 1.2rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+    min-height: 250px;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.pay-methods-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 1rem 0;
+}
+
+.pay-btn {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: #f0f4f8;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-close {
+    background: #e0e0e0;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
