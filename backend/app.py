@@ -1,0 +1,110 @@
+import sqlite3
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+app = Flask(__name__)
+# Permite solicitudes desde tu frontend en GitHub Pages
+CORS(app)
+
+DB_NAME = "database.db"
+
+def init_db():
+    """Inicializa la base de datos con las tablas requeridas."""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    # Tabla de Usuarios y Saldos
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            role TEXT DEFAULT 'Operador',
+            balance REAL DEFAULT 0.0
+        )
+    ''')
+    
+    # Tabla de Historial de Tareas
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS task_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            task_type TEXT,
+            reward REAL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    # Crear un usuario de prueba si no existe
+    cursor.execute("SELECT * FROM users WHERE username = 'demo_user'")
+    if not cursor.fetchone():
+        cursor.execute("INSERT INTO users (username, role, balance) VALUES ('demo_user', 'Operador', 0.0)")
+        
+    conn.commit()
+    conn.close()
+
+# Inicializar DB al arrancar el servidor
+init_db()
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Verifica que la API esté activa."""
+    return jsonify({"status": "ok", "message": "Backend InclusiWork activo"}), 200
+
+@app.route('/api/user/balance', methods=['GET'])
+def get_balance():
+    """Obtiene el saldo real del usuario desde la base de datos."""
+    username = request.args.get('username', 'demo_user')
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT balance, role FROM users WHERE username = ?", (username,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return jsonify({"username": username, "balance": row[0], "role": row[1]}), 200
+    return jsonify({"error": "Usuario no encontrado"}), 404
+
+@app.route('/api/tasks/complete', methods=['POST'])
+def complete_task():
+    """Procesa una tarea completada y acredita la recompensa."""
+    data = request.get_json()
+    username = data.get('username', 'demo_user')
+    task_type = data.get('task_type', 'General')
+    reward = data.get('reward', 0.0)
+
+    if reward <= 0:
+        return jsonify({"error": "Monto de recompensa invalido"}), 400
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    # Buscar usuario
+    cursor.execute("SELECT id, balance FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+
+    if not user:
+        conn.close()
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    user_id, current_balance = user
+    new_balance = current_balance + reward
+
+    # Actualizar saldo y registrar log
+    cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
+    cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)", (user_id, task_type, reward))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "message": "Tarea registrada exitosamente",
+        "new_balance": new_balance,
+        "reward_added": reward
+    }), 200
+
+if __name__ == '__main__':
+    # Ejecución local en puerto 5000
+    app.run(host='0.0.0.0', port=5000, debug=True)
+  
