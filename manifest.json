@@ -1,0 +1,23 @@
+{
+    "short_name": "InclusiWork",
+    "name": "InclusiWork - Microtareas Accesibles",
+    "description": "Plataforma de inclusión laboral y microtareas con gestión de saldos locales.",
+    "icons": [
+        {
+            "src": "https://via.placeholder.com/192.png?text=InclusiWork",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "https://via.placeholder.com/512.png?text=InclusiWork",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": "./index.html",
+    "background_color": "#ffffff",
+    "theme_color": "#2b5797",
+    "display": "standalone",
+    "orientation": "portrait"
+}
+
