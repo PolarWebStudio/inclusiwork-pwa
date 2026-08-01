@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="theme-color" content="#1a237e" />
+        <title>InclusiWork - Microtareas e Ingresos</title>
+        <link rel="stylesheet" href="css/styles.css?v=1.0" />
+        <link rel="manifest" href="manifest.json" />
+    </head>
+    <body>
+        <header class="navbar">
+            <div class="logo-area">
+                <h1>🤝 InclusiWork</h1>
+                <span id="role-indicator" class="role-badge"
+                    >Modo: Operador</span
+                >
+            </div>
+            <div class="actions-area">
+                <button
+                    id="btn-voice"
+                    onclick="toggleVoiceAssist()"
+                    class="icon-btn"
+                    title="Lector de Voz"
+                    >🔊</button
+                >
+                <button
+                    id="btn-role"
+                    onclick="switchUserRole()"
+                    class="icon-btn"
+                    title="Cambiar a Modo Tutor"
+                    >⚙️</button
+                >
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- Balance y Resumen de Ganancias -->
+            <section class="wallet-card">
+                <div class="wallet-info">
+                    <p class="wallet-label">Mi Saldo Disponible</p>
+                    <h2 id="user-balance">$0.00 COP</h2>
+                </div>
+                <button class="btn-withdraw" onclick="openPaymentModal()"
+                    >💸 Retirar</button
+                >
+            </section>
+
+            <!-- Selector de Canal de Tareas (3 Vías) -->
+            <section class="channels-section">
+                <h3>Selecciona cómo deseas generar ingresos hoy:</h3>
+                <div class="channels-grid">
+                    <button
+                        class="channel-card active"
+                        onclick="selectChannel('api')"
+                        id="chan-api"
+                    >
+                        <span class="chan-icon">🌐</span>
+                        <div class="chan-text">
+                            <strong>Canal A: Tareas Globales</strong>
+                            <small
+                                >Clasificación de imágenes y audios simples
+                                (APIs)</small
+                            >
+                        </div>
+                    </button>
+
+                    <button
+                        class="channel-card"
+                        onclick="selectChannel('sdk')"
+                        id="chan-sdk"
+                    >
+                        <span class="chan-icon">⭐</span>
+                        <div class="chan-text">
+                            <strong>Canal B: Ofertas Rápidas</strong>
+                            <small
+                                >Validación de encuestas y revisión corta
+                                (SDKs)</small
+                            >
+                        </div>
+                    </button>
+
+                    <button
+                        class="channel-card"
+                        onclick="selectChannel('b2b')"
+                        id="chan-b2b"
+                    >
+                        <span class="chan-icon">🇨🇴</span>
+                        <div class="chan-text">
+                            <strong>Canal C: Empresas Locales</strong>
+                            <small
+                                >Transcripción y verificación de negocios en
+                                Colombia</small
+                            >
+                        </div>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Área Dinámica donde se cargan las Microtareas -->
+            <section id="task-workspace" class="workspace-card">
+                <div id="task-content">
+                    <p style="text-align: center; color: var(--subtext-color)"
+                        >Cargando microtareas accesibles...</p
+                    >
+                </div>
+            </section>
+        </main>
+
+        <!-- Modal de Retiro / Saldo -->
+        <div id="payment-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Retirar mis Ganancias</h3>
+                <p>Selecciona tu billetera o método de pago local:</p>
+                <div class="pay-methods-grid">
+                    <button class="pay-btn" onclick="requestWithdrawal('Nequi')"
+                        >📱 Nequi</button
+                    >
+                    <button
+                        class="pay-btn"
+                        onclick="requestWithdrawal('Daviplata')"
+                        >🔴 Daviplata</button
+                    >
+                    <button
+                        class="pay-btn"
+                        onclick="requestWithdrawal('Binance')"
+                        >🟡 Binance Pay</button
+                    >
+                </div>
+                <button class="btn-close" onclick="closePaymentModal()"
+                    >Cerrar</button
+                >
+            </div>
+        </div>
+
+        <script src="js/app.js"></script>
+        <script src="js/tasks_engine.js"></script>
+        <script src="js/payments.js"></script>
+    </body>
+                        </html>
+  
