@@ -1,6 +1,4 @@
-// js/tasks_engine.js
-
-// --- BASE DE DATOS SIMULADA DE TAREAS ---
+// js/tasks_engine.js BASE DE DATOS DE TAREAS ---
 const taskDatabase = {
     api: [
         {
@@ -86,13 +84,15 @@ function loadTaskChannel(channelId) {
 // --- RENDERIZAR TAREA ACTUAL ---
 function renderCurrentTask() {
     const workspace = document.getElementById("task-content");
+    if (!workspace) return;
+
     const tasks = taskDatabase[currentChannel];
 
     if (currentTaskIndex >= tasks.length) {
         workspace.innerHTML = `
             <div style="text-align: center; padding: 2rem;">
                 <h3 style="color: #2e7d32;">¡No hay más tareas por ahora! 🎉</h3>
-                <p style="color: var(--subtext-color);">Revisa más tarde o cambia de canal.</p>
+                <p style="color: var(--subtext-color, #666);">Revisa más tarde o cambia de canal.</p>
             </div>
         `;
         leerTexto("No hay más tareas disponibles en este canal.");
@@ -102,36 +102,35 @@ function renderCurrentTask() {
     const task = tasks[currentTaskIndex];
     let html = `
         <div style="margin-bottom: 15px;">
-            <span style="background: #e8eaf6; color: var(--primary); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
+            <span style="background: #e8eaf6; color: var(--primary, #1a237e); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
                 Recompensa: $${task.reward} COP
             </span>
         </div>
         <h3 style="margin-bottom: 15px;">${task.prompt}</h3>
     `;
 
-    // Renderizar según el tipo de tarea
     if (task.type === "image") {
         html += `<img src="${task.content}" alt="Imagen de tarea" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 15px;">`;
         html += `
             <div style="display: flex; gap: 10px;">
-                <button class="btn-task" style="background: #4caf50; color: white;" onclick="completeTask(${task.reward})">SÍ</button>
-                <button class="btn-task" style="background: #f44336; color: white;" onclick="completeTask(${task.reward})">NO</button>
+                <button class="btn-task" style="background: #4caf50; color: white;" onclick="completeTask('${task.type}', ${task.reward})">SÍ</button>
+                <button class="btn-task" style="background: #f44336; color: white;" onclick="completeTask('${task.type}', ${task.reward})">NO</button>
             </div>
         `;
     } else if (task.type === "text" || task.type === "audio") {
-        html += `<div style="padding: 15px; background: #f0f4f8; border-left: 4px solid var(--primary); margin-bottom: 15px; border-radius: 4px; font-style: italic;">${task.content}</div>`;
+        html += `<div style="padding: 15px; background: #f0f4f8; border-left: 4px solid var(--primary, #1a237e); margin-bottom: 15px; border-radius: 4px; font-style: italic;">${task.content}</div>`;
 
         if (task.options) {
             html += `<div style="display: flex; flex-direction: column; gap: 8px;">`;
             task.options.forEach(opt => {
-                html += `<button class="btn-task" style="background: #e0e0e0; color: #333;" onclick="completeTask(${task.reward})">${opt}</button>`;
+                html += `<button class="btn-task" style="background: #e0e0e0; color: #333;" onclick="completeTask('${task.type}', ${task.reward})">${opt}</button>`;
             });
             html += `</div>`;
         } else {
             html += `
                 <div style="display: flex; gap: 10px;">
-                    <button class="btn-task" style="background: #4caf50; color: white;" onclick="completeTask(${task.reward})">SÍ / Completar</button>
-                    <button class="btn-task" style="background: #f44336; color: white;" onclick="completeTask(${task.reward})">NO / Omitir</button>
+                    <button class="btn-task" style="background: #4caf50; color: white;" onclick="completeTask('${task.type}', ${task.reward})">SÍ / Completar</button>
+                    <button class="btn-task" style="background: #f44336; color: white;" onclick="completeTask('${task.type}', ${task.reward})">NO / Omitir</button>
                 </div>
             `;
         }
@@ -139,7 +138,7 @@ function renderCurrentTask() {
         html += `<p style="margin-bottom: 15px;">${task.content}</p>`;
         html += `<div style="display: flex; flex-direction: column; gap: 8px;">`;
         task.options.forEach(opt => {
-            html += `<button class="btn-task" style="background: #e0e0e0; color: #333;" onclick="completeTask(${task.reward})">${opt}</button>`;
+            html += `<button class="btn-task" style="background: #e0e0e0; color: #333;" onclick="completeTask('${task.type}', ${task.reward})">${opt}</button>`;
         });
         html += `</div>`;
     }
@@ -148,28 +147,53 @@ function renderCurrentTask() {
     leerTexto(`${task.prompt}. Recompensa estimada: ${task.reward} pesos.`);
 }
 
-// --- COMPLETAR TAREA Y SUMAR SALDO ---
-function completeTask(reward) {
-    // 1. Sumar al saldo
-    userState.balance += reward;
-    localStorage.setItem("inclusiwork_balance", userState.balance);
-    actualizarInterfaz();
+// --- COMPLETAR TAREA Y REGISTRAR EN EL BACKEND ---
+async function completeTask(taskType, reward) {
+    const workspace = document.getElementById("task-content");
+    if (workspace) {
+        workspace.innerHTML =
+            '<p style="text-align: center; padding: 2rem;">Validando tarea con el servidor...</p>';
+    }
 
-    // 2. Feedback de éxito
+    try {
+        const response = await fetch(`${API_BASE_URL}/tasks/complete`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: userState.username,
+                task_type: taskType,
+                reward: reward
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            userState.balance = data.new_balance;
+            localStorage.setItem("inclusiwork_balance", data.new_balance);
+        } else {
+            // Fallback en caso de error del backend
+            userState.balance += reward;
+            localStorage.setItem("inclusiwork_balance", userState.balance);
+        }
+    } catch (error) {
+        console.warn(
+            "[PWA] No se pudo conectar con la API, registrando en almacenamiento local:",
+            error
+        );
+        userState.balance += reward;
+        localStorage.setItem("inclusiwork_balance", userState.balance);
+    }
+
+    actualizarInterfaz();
     leerTexto(`Tarea completada. Ganaste ${reward} pesos.`);
 
-    // 3. Pasar a la siguiente tarea
     currentTaskIndex++;
-
-    // Pequeño delay para simular carga
-    document.getElementById("task-content").innerHTML =
-        '<p style="text-align: center;">Enviando respuesta...</p>';
     setTimeout(() => {
         renderCurrentTask();
-    }, 600);
+    }, 400);
 }
 
-// Estilos dinámicos para los botones de las tareas
+// Estilos dinámicos para los botones
 const style = document.createElement("style");
 style.innerHTML = `
     .btn-task {
@@ -185,4 +209,3 @@ style.innerHTML = `
     .btn-task:hover { opacity: 0.9; }
 `;
 document.head.appendChild(style);
-
