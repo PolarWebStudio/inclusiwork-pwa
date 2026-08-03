@@ -24,7 +24,7 @@ function closePaymentModal() {
 }
 
 // Solicitar Retiro (Nequi, Daviplata, Binance)
-function requestWithdrawal(method) {
+async function requestWithdrawal(method) {
     if (userState.balance < MIN_WITHDRAWAL) {
         const errorMsg = `Saldo insuficiente. El monto mínimo para retirar es de $${MIN_WITHDRAWAL.toLocaleString("es-CO")} COP.`;
         alert(errorMsg);
