@@ -12,7 +12,7 @@ def init_db():
     """Inicializa la base de datos con las tablas requeridas."""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
+
     # Tabla de Usuarios y Saldos
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -22,7 +22,7 @@ def init_db():
             balance REAL DEFAULT 0.0
         )
     ''')
-    
+
     # Tabla de Historial de Tareas
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS task_logs (
@@ -34,12 +34,12 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
-    
+
     # Crear un usuario de prueba si no existe
     cursor.execute("SELECT * FROM users WHERE username = 'demo_user'")
     if not cursor.fetchone():
         cursor.execute("INSERT INTO users (username, role, balance) VALUES ('demo_user', 'Operador', 0.0)")
-        
+
     conn.commit()
     conn.close()
 
@@ -49,7 +49,10 @@ init_db()
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Verifica que la API esté activa."""
-    return jsonify({"status": "ok", "message": "Backend InclusiWork activo"}), 200
+    return jsonify({
+        "status": "ok", 
+        "message": "Backend InclusiWork activo"
+    }), 200
 
 @app.route('/api/user/balance', methods=['GET'])
 def get_balance():
@@ -57,14 +60,21 @@ def get_balance():
     username = request.args.get('username', 'demo_user')
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
+
     cursor.execute("SELECT balance, role FROM users WHERE username = ?", (username,))
     row = cursor.fetchone()
     conn.close()
-    
+
     if row:
-        return jsonify({"username": username, "balance": row[0], "role": row[1]}), 200
-    return jsonify({"error": "Usuario no encontrado"}), 404
+        return jsonify({
+            "username": username, 
+            "balance": row[0], 
+            "role": row[1]
+        }), 200
+        
+    return jsonify({
+        "error": "Usuario no encontrado"
+    }), 404
 
 @app.route('/api/tasks/complete', methods=['POST'])
 def complete_task():
@@ -75,7 +85,9 @@ def complete_task():
     reward = data.get('reward', 0.0)
 
     if reward <= 0:
-        return jsonify({"error": "Monto de recompensa invalido"}), 400
+        return jsonify({
+            "error": "Monto de recompensa invalido"
+        }), 400
 
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -86,7 +98,9 @@ def complete_task():
 
     if not user:
         conn.close()
-        return jsonify({"error": "Usuario no encontrado"}), 404
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
 
     user_id, current_balance = user
     new_balance = current_balance + reward
@@ -104,7 +118,47 @@ def complete_task():
         "reward_added": reward
     }), 200
 
+# Endpoint para recibir los pagos/notificaciones de Monlix (Webhook)
+@app.route('/api/webhooks/monlix', methods=['GET', 'POST'])
+def monlix_webhook():
+    try:
+        # Monlix suele enviar los datos por parámetros de consulta (GET) o JSON (POST)
+        data = request.args if request.method == 'GET' else (request.get_json() or {})
+
+        username = data.get('userId', 'demo_user')
+        reward_usd = float(data.get('reward', 0))  # Recompensa en USD enviada por Monlix
+        status = str(data.get('status', ''))       # Status 1 suele ser completado
+
+        # Validación básica de transacción
+        if status == '1':
+            trm = 4000         # Tasa de cambio aproximada COP/USD
+            margin = 0.80      # 80% para el usuario, 20% para la plataforma
+            cop_reward = round((reward_usd * trm) * margin, 2)
+
+            conn = sqlite3.connect(DB_NAME)
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT id, balance FROM users WHERE username = ?", (username,))
+            user = cursor.fetchone()
+
+            if user:
+                user_id, current_balance = user
+                new_balance = current_balance + cop_reward
+
+                cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
+                cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)", 
+                               (user_id, 'Monlix Offerwall', cop_reward))
+                conn.commit()
+
+            conn.close()
+            return "OK", 200
+
+        return "Ignored status", 200
+
+    except Exception as e:
+        print(f"Error en Webhook Monlix: {e}")
+        return "Error", 400
+
 if __name__ == '__main__':
     # Ejecución local en puerto 5000
     app.run(host='0.0.0.0', port=5000, debug=True)
-  
