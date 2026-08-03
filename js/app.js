@@ -1,5 +1,4 @@
-// js/app.js CONFIGURACIÓN DE LA API BACKEND ---
-// Detecta si estás probando localmente o en producción cuando despliegues en Render
+// --- CONFIGURACIÓN DE LA API BACKEND ---
 const API_BASE_URL =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1"
@@ -14,16 +13,50 @@ const userState = {
     voiceEnabled: false
 };
 
-// --- INICIALIZACIÓN ---
+// --- INICIALIZACIÓN UNIFICADA ---
 document.addEventListener("DOMContentLoaded", () => {
     actualizarInterfaz();
     syncBalanceWithBackend();
+    loadMonlixOfferwall("demo_user");
 
     // Iniciar con el Canal A por defecto
     if (typeof loadTaskChannel === "function") {
         loadTaskChannel("api");
     }
 });
+
+// --- CARGA DEL OFFERWALL MONLIX ---
+function loadMonlixOfferwall(username = "demo_user") {
+    // Cuando te llegue el correo, reemplazas esto por tu ID real (ej: "65f8a9...")
+    const MONLIX_APP_ID = "AQUÍ_VA_TU_APP_ID";
+
+    const container = document.getElementById("monlix-offerwall-container");
+
+    if (!container) return;
+
+    // Si aún no hemos puesto la App ID real, mostramos una tarjeta limpia
+    if (MONLIX_APP_ID === "AQUÍ_VA_TU_APP_ID") {
+        container.innerHTML = `
+      <div style="text-align: center; padding: 3rem 1rem; color: #555;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
+        <h3 style="margin-bottom: 0.5rem; color: #1a237e;">Muro en Proceso de Verificación</h3>
+        <p style="max-width: 400px; margin: 0 auto; font-size: 0.95rem;">
+          Estamos validando las credenciales de la red publicitaria. Muy pronto podrás completar ofertas y sumar más saldo COP.
+        </p>
+      </div>
+    `;
+    } else {
+        // Cuando pongas tu ID real, inserta el iframe automáticamente
+        const offerwallUrl = `https://offerwall.monlix.com/tag/${MONLIX_APP_ID}?userId=${encodeURIComponent(username)}`;
+        container.innerHTML = `
+      <iframe 
+        src="${offerwallUrl}" 
+        style="width: 100%; height: 600px; border: none;" 
+        title="Monlix Offerwall">
+      </iframe>
+    `;
+    }
+}
 
 // --- SINCRONIZACIÓN DE SALDO REAL DESDE EL BACKEND ---
 async function syncBalanceWithBackend() {
