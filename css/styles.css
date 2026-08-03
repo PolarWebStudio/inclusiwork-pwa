@@ -14,10 +14,7 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family:
-        system-ui,
-        -apple-system,
-        sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
 body {
@@ -153,7 +150,7 @@ body {
     min-height: 250px;
 }
 
-/* Modal */
+/* Modal y Pasarela de Retiros */
 .modal {
     position: fixed;
     top: 0;
@@ -162,8 +159,9 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.6);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
 .modal.hidden {
@@ -171,36 +169,42 @@ body {
 }
 
 .modal-content {
-    background: white;
-    padding: 1.5rem;
+    background: #ffffff;
+    padding: 25px;
     border-radius: var(--radius);
     width: 90%;
     max-width: 400px;
     text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .pay-methods-grid {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin: 1rem 0;
+    margin: 20px 0;
 }
 
 .pay-btn {
     padding: 12px;
     border: 1px solid var(--border-color);
+    background: #f8f9fa;
     border-radius: 8px;
-    background: #f0f4f8;
-    font-size: 1rem;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
+    transition: background 0.2s;
+}
+
+.pay-btn:hover {
+    background: #e2e8f0;
 }
 
 .btn-close {
-    background: #e0e0e0;
+    background: #ef4444;
+    color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 10px 20px;
     border-radius: 6px;
     cursor: pointer;
-  }
-
+}
