@@ -10,9 +10,11 @@ CORS(app)
 DB_NAME = "database.db"
 OGADS_API_KEY = os.environ.get('OGADS_API_KEY', 'TU_API_KEY_DE_OGADS')
 
-def init_db():
-conn = sqlite3.connect(DB_NAME)
-cursor = conn.cursor()
+def get_db():
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 
 cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
