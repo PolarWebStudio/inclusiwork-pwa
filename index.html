@@ -12,9 +12,7 @@
         <header class="navbar">
             <div class="logo-area">
                 <h1>🤝 InclusiWork</h1>
-                <span id="role-indicator" class="role-badge"
-                    >Modo: Operador</span
-                >
+                <span id="role-indicator" class="role-badge">Modo: Operador</span>
             </div>
             <div class="actions-area">
                 <button
@@ -23,16 +21,14 @@
                     class="icon-btn"
                     title="Lector de Voz"
                     aria-label="Activar lector de voz"
-                    >🔊</button
-                >
+                >🔊</button>
                 <button
                     id="btn-role"
                     onclick="switchUserRole()"
                     class="icon-btn"
                     title="Cambiar Modo de Usuario"
                     aria-label="Cambiar modo entre Operador y Tutor"
-                    >⚙️</button
-                >
+                >⚙️</button>
             </div>
         </header>
 
@@ -43,9 +39,7 @@
                     <p class="wallet-label">Mi Saldo Disponible</p>
                     <h2 id="user-balance">$0.00 COP</h2>
                 </div>
-                <button class="btn-withdraw" onclick="openPaymentModal()"
-                    >💸 Retirar</button
-                >
+                <button class="btn-withdraw" onclick="openPaymentModal()">💸 Retirar</button>
             </section>
 
             <!-- Selector de Canal de Tareas (3 Vías) -->
@@ -60,10 +54,7 @@
                         <span class="chan-icon">🌐</span>
                         <div class="chan-text">
                             <strong>Canal A: Tareas Globales</strong>
-                            <small
-                                >Clasificación de imágenes y audios simples
-                                (APIs)</small
-                            >
+                            <small>Clasificación de imágenes y audios simples (APIs)</small>
                         </div>
                     </button>
 
@@ -75,10 +66,7 @@
                         <span class="chan-icon">⭐</span>
                         <div class="chan-text">
                             <strong>Canal B: Ofertas Rápidas</strong>
-                            <small
-                                >Validación de encuestas y revisión corta
-                                (SDKs)</small
-                            >
+                            <small>Validación de encuestas y revisión corta (SDKs)</small>
                         </div>
                     </button>
 
@@ -90,10 +78,7 @@
                         <span class="chan-icon">🇨🇴</span>
                         <div class="chan-text">
                             <strong>Canal C: Empresas Locales</strong>
-                            <small
-                                >Transcripción y verificación de negocios en
-                                Colombia</small
-                            >
+                            <small>Transcripción y verificación de negocios en Colombia</small>
                         </div>
                     </button>
                 </div>
@@ -102,44 +87,33 @@
             <!-- Área Dinámica donde se cargan las Microtareas -->
             <section id="task-workspace" class="workspace-card">
                 <div id="task-content">
-                    <p style="text-align: center; color: var(--subtext-color)"
-                        >Cargando microtareas accesibles...</p
-                    >
+                    <p style="text-align: center; color: var(--subtext-color)">Cargando microtareas accesibles...</p>
                 </div>
             </section>
 
-            <!-- Contenedor del Offerwall de Monlix -->
-<!-- Seccion de Ofertas Monlix -->
-<section style="margin-top: 1.5rem" class="workspace-card">
-    <h3 style="margin-bottom: 0.5rem; color: #1a237e">Muro de Ofertas Monlix</h3>
-    <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem">
-        Completa encuestas y juegos recomendados para sumar más saldo en COP.
-    </p>
-
-    <!-- Contenedor dinámico para Monlix -->
-    <div id="monlix-offerwall-container" style="width: 100%; min-height: 250px">
-        <p style="text-align: center; color: #666; padding: 2rem">Cargando muro de Monlix...</p>
-    </div>
-</section>
-
-            <!-- Seccion de Ofertas OGAds -->
+            <!-- Sección de Ofertas Monlix -->
             <section style="margin-top: 1.5rem" class="workspace-card">
-                <h3 style="margin-bottom: 0.5rem; color: #1a237e"
-                    >Muro de Tareas y Encuestas Destacadas</h3
-                >
+                <h3 style="margin-bottom: 0.5rem; color: #1a237e">Muro de Ofertas Monlix</h3>
                 <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem">
-                    Completa las ofertas disponibles para sumar saldo a tu
-                    cuenta en tiempo real.
+                    Completa encuestas y juegos recomendados para sumar más saldo en COP.
+                </p>
+
+                <!-- Contenedor dinámico para Monlix -->
+                <div id="monlix-offerwall-container" style="width: 100%; min-height: 250px">
+                    <p style="text-align: center; color: #666; padding: 2rem">Cargando muro de Monlix...</p>
+                </div>
+            </section>
+
+            <!-- Sección de Ofertas OGAds -->
+            <section style="margin-top: 1.5rem" class="workspace-card">
+                <h3 style="margin-bottom: 0.5rem; color: #1a237e">Muro de Tareas y Encuestas Destacadas</h3>
+                <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem">
+                    Completa las ofertas disponibles para sumar saldo a tu cuenta en tiempo real.
                 </p>
 
                 <!-- Contenedor dinámico para OGAds -->
-                <div
-                    id="ogads-offerwall-container"
-                    style="width: 100%; min-height: 250px"
-                >
-                    <p style="text-align: center; color: #666; padding: 2rem"
-                        >Cargando ofertas disponibles...</p
-                    >
+                <div id="ogads-offerwall-container" style="width: 100%; min-height: 250px">
+                    <p style="text-align: center; color: #666; padding: 2rem">Cargando ofertas disponibles...</p>
                 </div>
             </section>
         </main>
@@ -150,23 +124,11 @@
                 <h3>Retirar mis Ganancias</h3>
                 <p>Selecciona tu billetera o método de pago local:</p>
                 <div class="pay-methods-grid">
-                    <button class="pay-btn" onclick="requestWithdrawal('Nequi')"
-                        >📱 Nequi</button
-                    >
-                    <button
-                        class="pay-btn"
-                        onclick="requestWithdrawal('Daviplata')"
-                        >🔴 Daviplata</button
-                    >
-                    <button
-                        class="pay-btn"
-                        onclick="requestWithdrawal('Binance')"
-                        >🟡 Binance Pay</button
-                    >
+                    <button class="pay-btn" onclick="requestWithdrawal('Nequi')">📱 Nequi</button>
+                    <button class="pay-btn" onclick="requestWithdrawal('Daviplata')">🔴 Daviplata</button>
+                    <button class="pay-btn" onclick="requestWithdrawal('Binance')">🟡 Binance Pay</button>
                 </div>
-                <button class="btn-close" onclick="closePaymentModal()"
-                    >Cerrar</button
-                >
+                <button class="btn-close" onclick="closePaymentModal()">Cerrar</button>
             </div>
         </div>
 
