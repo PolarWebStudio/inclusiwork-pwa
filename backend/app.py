@@ -1,4 +1,6 @@
+import os
 import sqlite3
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -6,6 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 DB_NAME = "database.db"
+OGADS_API_KEY = os.environ.get('OGADS_API_KEY', 'TU_API_KEY_DE_OGADS')
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
@@ -38,12 +41,13 @@ def init_db():
     conn.commit()
     conn.close()
 
+# Inicializar Base de Datos al arrancar
 init_db()
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({
-        "status": "ok", 
+        "status": "ok",
         "message": "Backend InclusiWork activo"
     }), 200
 
@@ -59,54 +63,120 @@ def get_balance():
 
     if row:
         return jsonify({
-            "username": username, 
-            "balance": row[0], 
+            "username": username,
+            "balance": row[0],
             "role": row[1]
         }), 200
-        
+
     return jsonify({
         "error": "Usuario no encontrado"
     }), 404
 
+# ==========================================
+# ENDPOINT PARA COMPLETAR TAREAS MANUALES
+# ==========================================
 @app.route('/api/tasks/complete', methods=['POST'])
 def complete_task():
-    data = request.get_json() or {}
-    username = data.get('username', 'demo_user')
-    task_type = data.get('task_type', 'General')
-    reward = data.get('reward', 0.0)
+    try:
+        data = request.get_json() or {}
+        username = data.get('username', 'demo_user')
+        task_type = data.get('task_type', 'Tarea Manual')
+        reward = float(data.get('reward', 0))
 
-    if reward <= 0:
-        return jsonify({
-            "error": "Monto de recompensa invalido"
-        }), 400
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
 
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
+        cursor.execute("SELECT id, balance FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
 
-    cursor.execute("SELECT id, balance FROM users WHERE username = ?", (username,))
-    user = cursor.fetchone()
+        if user:
+            user_id, current_balance = user
+            new_balance = current_balance + reward
 
-    if not user:
+            cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
+            cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
+                           (user_id, task_type, reward))
+            conn.commit()
+            conn.close()
+
+            return jsonify({"status": "success", "new_balance": new_balance}), 200
+
         conn.close()
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+# ==========================================
+# ENDPOINT PARA CONSUMIR OFERTAS DE OGADS
+# ==========================================
+@app.route('/api/offers/ogads', methods=['GET'])
+def get_ogads_offers():
+    user_ip = request.remote_addr
+    user_agent = request.headers.get('User-Agent', '')
+
+    url = "https://appsave.store/api/v2"
+    headers = {
+        "Authorization": f"Bearer {OGADS_API_KEY}"
+    }
+    params = {
+        "ip": user_ip,
+        "user_agent": user_agent
+    }
+
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        data = response.json()
+        return jsonify(data), response.status_code
+    except Exception as e:
         return jsonify({
-            "error": "Usuario no encontrado"
-        }), 404
+            "error": "No se pudieron obtener las ofertas", 
+            "details": str(e)
+        }), 500
 
-    user_id, current_balance = user
-    new_balance = current_balance + reward
+# ==========================================
+# WEBHOOK PARA RECIBIR NOTIFICACIONES DE OGADS
+# ==========================================
+@app.route('/api/webhooks/ogads', methods=['GET', 'POST'])
+def ogads_webhook():
+    try:
+        data = request.args if request.method == 'GET' else (request.get_json() or {})
 
-    cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
-    cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)", (user_id, task_type, reward))
+        username = data.get('userId', 'demo_user')
+        reward_usd = float(data.get('payout', 0))
 
-    conn.commit()
-    conn.close()
+        if reward_usd > 0:
+            trm = 4000
+            margin = 0.80
+            cop_reward = round((reward_usd * trm) * margin, 2)
 
-    return jsonify({
-        "message": "Tarea registrada exitosamente",
-        "new_balance": new_balance,
-        "reward_added": reward
-    }), 200
+            conn = sqlite3.connect(DB_NAME)
+            cursor = conn.cursor()
 
+            cursor.execute("SELECT id, balance FROM users WHERE username = ?", (username,))
+            user = cursor.fetchone()
+
+            if user:
+                user_id, current_balance = user
+                new_balance = current_balance + cop_reward
+
+                cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
+                cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
+                               (user_id, 'OGAds Offerwall', cop_reward))
+                conn.commit()
+
+            conn.close()
+            return "OK", 200
+
+        return "Ignored payout", 200
+
+    except Exception as e:
+        print(f"Error en Webhook OGAds: {e}")
+        return "Error", 400
+
+# ==========================================
+# WEBHOOK MONLIX EXISTENTE
+# ==========================================
 @app.route('/api/webhooks/monlix', methods=['GET', 'POST'])
 def monlix_webhook():
     try:
@@ -123,7 +193,7 @@ def monlix_webhook():
 
             conn = sqlite3.connect(DB_NAME)
             cursor = conn.cursor()
-            
+
             cursor.execute("SELECT id, balance FROM users WHERE username = ?", (username,))
             user = cursor.fetchone()
 
@@ -132,7 +202,7 @@ def monlix_webhook():
                 new_balance = current_balance + cop_reward
 
                 cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
-                cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)", 
+                cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
                                (user_id, 'Monlix Offerwall', cop_reward))
                 conn.commit()
 
