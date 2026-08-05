@@ -12,7 +12,9 @@
         <header class="navbar">
             <div class="logo-area">
                 <h1>🤝 InclusiWork</h1>
-                <span id="role-indicator" class="role-badge">Modo: Operador</span>
+                <span id="role-indicator" class="role-badge"
+                    >Modo: Operador</span
+                >
             </div>
             <div class="actions-area">
                 <button
@@ -107,23 +109,26 @@
             </section>
 
             <!-- Contenedor del Offerwall de Monlix -->
-            <section style="margin-top: 1.5rem;" class="workspace-card">
-                <h3 style="margin-bottom: 0.5rem; color: #1a237e;">Muro de Tareas y Encuestas (Monlix)</h3>
-                <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem;">
-                    Completa encuestas o descarga aplicaciones para ganar saldo en COP directamente en tu cuenta.
+
+            <!-- Seccion de Ofertas OGAds -->
+            <section style="margin-top: 1.5rem" class="workspace-card">
+                <h3 style="margin-bottom: 0.5rem; color: #1a237e"
+                    >Muro de Tareas y Encuestas Destacadas</h3
+                >
+                <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem">
+                    Completa las ofertas disponibles para sumar saldo a tu
+                    cuenta en tiempo real.
                 </p>
 
-                <!-- Contenedor dinámico administrado por app.js -->
+                <!-- Contenedor dinámico para OGAds -->
                 <div
-                    id="monlix-offerwall-container"
-                    style="
-                        width: 100%;
-                        min-height: 400px;
-                        border: 1px solid var(--border-color);
-                        border-radius: 8px;
-                        overflow: hidden;
-                    "
-                ></div>
+                    id="ogads-offerwall-container"
+                    style="width: 100%; min-height: 250px"
+                >
+                    <p style="text-align: center; color: #666; padding: 2rem"
+                        >Cargando ofertas disponibles...</p
+                    >
+                </div>
             </section>
         </main>
 
