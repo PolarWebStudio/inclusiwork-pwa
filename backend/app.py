@@ -10,25 +10,30 @@ CORS(app)
 DB_NAME = "database.db"
 OGADS_API_KEY = os.environ.get('OGADS_API_KEY', 'TU_API_KEY_DE_OGADS')
 
+
 def get_db():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     return conn
 
+
 def init_db():
     conn = get_db()
     cursor = conn.cursor()
-    
-    cursor.execute('''
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             role TEXT DEFAULT 'Operador',
             balance REAL DEFAULT 0.0
         )
-    ''')
+    """
+    )
 
-    cursor.execute('''
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS task_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
@@ -37,24 +42,29 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
-    ''')
+    """
+    )
 
-    cursor.execute("SELECT * FROM users WHERE username = 'demo_user'")
-    if not cursor.fetchone():
-        cursor.execute("INSERT INTO users (username, role, balance) VALUES ('demo_user', 'Operador', 0.0)")
+    cursor.execute("SELECT id FROM users WHERE username = 'demo_user'")
+    user_exists = cursor.fetchone()
+
+    if not user_exists:
+        cursor.execute(
+            "INSERT INTO users (username, role, balance) VALUES ('demo_user', 'Operador', 0.0)"
+        )
 
     conn.commit()
     conn.close()
 
-# Inicializar Base de Datos al arrancar
+
+# Inicializar la base de datos
 init_db()
+
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    return jsonify({
-        "status": "ok",
-        "message": "Backend InclusiWork activo"
-    }), 200
+    return jsonify({"status": "ok", "message": "Backend InclusiWork activo"}), 200
+
 
 @app.route('/api/user/balance', methods=['GET'])
 def get_balance():
@@ -62,24 +72,23 @@ def get_balance():
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT balance, role FROM users WHERE username = ?", (username,))
+    cursor.execute(
+        "SELECT balance, role FROM users WHERE username = ?", (username,)
+    )
     row = cursor.fetchone()
     conn.close()
 
     if row:
-        return jsonify({
-            "username": username,
-            "balance": row[0],
-            "role": row[1]
-        }), 200
+        return (
+            jsonify(
+                {"username": username, "balance": row[0], "role": row[1]}
+            ),
+            200,
+        )
 
-    return jsonify({
-        "error": "Usuario no encontrado"
-    }), 404
+    return jsonify({"error": "Usuario no encontrado"}), 404
 
-# ==========================================
-# ENDPOINT PARA COMPLETAR TAREAS MANUALES
-# ==========================================
+
 @app.route('/api/tasks/complete', methods=['POST'])
 def complete_task():
     try:
@@ -91,68 +100,71 @@ def complete_task():
         conn = get_db()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id, balance FROM users WHERE username = ?", (username,))
+        cursor.execute(
+            "SELECT id, balance FROM users WHERE username = ?", (username,)
+        )
         user = cursor.fetchone()
 
         if user:
             user_id, current_balance = user
             new_balance = current_balance + reward
 
-            cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
-            cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
-                           (user_id, task_type, reward))
+            cursor.execute(
+                "UPDATE users SET balance = ? WHERE id = ?",
+                (new_balance, user_id),
+            )
+            cursor.execute(
+                "INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
+                (user_id, task_type, reward),
+            )
             conn.commit()
             conn.close()
 
-            return jsonify({
-                "status": "success", 
-                "new_balance": new_balance
-            }), 200
+            return (
+                jsonify({"status": "success", "new_balance": new_balance}),
+                200,
+            )
 
         conn.close()
-        return jsonify({
-            "error": "Usuario no encontrado"
-        }), 404
+        return jsonify({"error": "Usuario no encontrado"}), 404
 
     except Exception as e:
-        return jsonify({
-            "error": str(e)
-        }), 400
+        return jsonify({"error": str(e)}), 400
 
-# ==========================================
-# ENDPOINT PARA CONSUMIR OFERTAS DE OGADS
-# ==========================================
+
 @app.route('/api/offers/ogads', methods=['GET'])
 def get_ogads_offers():
     user_ip = request.remote_addr
     user_agent = request.headers.get('User-Agent', '')
 
     url = "https://appsave.store/api/v2"
-    headers = {
-        "Authorization": f"Bearer {OGADS_API_KEY}"
-    }
-    params = {
-        "ip": user_ip,
-        "user_agent": user_agent
-    }
+    headers = {"Authorization": f"Bearer {OGADS_API_KEY}"}
+    params = {"ip": user_ip, "user_agent": user_agent}
 
     try:
         response = requests.get(url, headers=headers, params=params)
         data = response.json()
         return jsonify(data), response.status_code
     except Exception as e:
-        return jsonify({
-            "error": "No se pudieron obtener las ofertas",
-            "details": str(e)
-        }), 500
+        return (
+            jsonify(
+                {
+                    "error": "No se pudieron obtener las ofertas",
+                    "details": str(e),
+                }
+            ),
+            500,
+        )
 
-# ==========================================
-# WEBHOOK PARA RECIBIR NOTIFICACIONES DE OGADS
-# ==========================================
+
 @app.route('/api/webhooks/ogads', methods=['GET', 'POST'])
 def ogads_webhook():
     try:
-        data = request.args if request.method == 'GET' else (request.get_json() or {})
+        data = (
+            request.args
+            if request.method == 'GET'
+            else (request.get_json() or {})
+        )
 
         username = data.get('userId', 'demo_user')
         reward_usd = float(data.get('payout', 0))
@@ -165,16 +177,23 @@ def ogads_webhook():
             conn = get_db()
             cursor = conn.cursor()
 
-            cursor.execute("SELECT id, balance FROM users WHERE username = ?", (username,))
+            cursor.execute(
+                "SELECT id, balance FROM users WHERE username = ?", (username,)
+            )
             user = cursor.fetchone()
 
             if user:
                 user_id, current_balance = user
                 new_balance = current_balance + cop_reward
 
-                cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
-                cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
-                               (user_id, 'OGAds Offerwall', cop_reward))
+                cursor.execute(
+                    "UPDATE users SET balance = ? WHERE id = ?",
+                    (new_balance, user_id),
+                )
+                cursor.execute(
+                    "INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
+                    (user_id, 'OGAds Offerwall', cop_reward),
+                )
                 conn.commit()
 
             conn.close()
@@ -186,13 +205,15 @@ def ogads_webhook():
         print(f"Error en Webhook OGAds: {e}")
         return "Error", 400
 
-# ==========================================
-# WEBHOOK MONLIX EXISTENTE
-# ==========================================
+
 @app.route('/api/webhooks/monlix', methods=['GET', 'POST'])
 def monlix_webhook():
     try:
-        data = request.args if request.method == 'GET' else (request.get_json() or {})
+        data = (
+            request.args
+            if request.method == 'GET'
+            else (request.get_json() or {})
+        )
 
         username = data.get('userId', 'demo_user')
         reward_usd = float(data.get('reward', 0))
@@ -206,16 +227,23 @@ def monlix_webhook():
             conn = get_db()
             cursor = conn.cursor()
 
-            cursor.execute("SELECT id, balance FROM users WHERE username = ?", (username,))
+            cursor.execute(
+                "SELECT id, balance FROM users WHERE username = ?", (username,)
+            )
             user = cursor.fetchone()
 
             if user:
                 user_id, current_balance = user
                 new_balance = current_balance + cop_reward
 
-                cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
-                cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
-                               (user_id, 'Monlix Offerwall', cop_reward))
+                cursor.execute(
+                    "UPDATE users SET balance = ? WHERE id = ?",
+                    (new_balance, user_id),
+                )
+                cursor.execute(
+                    "INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
+                    (user_id, 'Monlix Offerwall', cop_reward),
+                )
                 conn.commit()
 
             conn.close()
