@@ -18,13 +18,73 @@ document.addEventListener("DOMContentLoaded", () => {
     actualizarInterfaz();
     syncBalanceWithBackend();
     loadOgadsOffers();
-    loadMonlixOfferwall()
+    loadMonlixOfferwall();
 
     // Iniciar con el Canal A por defecto
     if (typeof loadTaskChannel === "function") {
         loadTaskChannel("api");
     }
 });
+
+// --- SINCRONIZACIÓN DE SALDO REAL DESDE EL BACKEND ---
+async function syncBalanceWithBackend() {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/user/balance?username=${userState.username}`
+        );
+        if (response.ok) {
+            const data = await response.json();
+            userState.balance = data.balance;
+            localStorage.setItem("inclusiwork_balance", data.balance);
+            actualizarInterfaz();
+        }
+    } catch (error) {
+        console.warn(
+            "[PWA] Servidor Backend offline/local. Usando caché local:",
+            error
+        );
+    }
+}
+
+// --- CARGA DE OFERTAS OGADS ---
+async function loadOgadsOffers() {
+    const container = document.getElementById("ogads-offerwall-container");
+    if (!container) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/offers/ogads`);
+        if (!response.ok) throw new Error("Error al obtener ofertas");
+
+        const data = await response.json();
+
+        if (data.offers && data.offers.length > 0) {
+            let html =
+                '<div style="display: flex; flex-direction: column; gap: 10px;">';
+            data.offers.forEach(offer => {
+                html += `
+                    <div style="border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${offer.name_short || offer.name}</strong>
+                            <p style="font-size: 0.8rem; color: #555;">${offer.ad_description || ""}</p>
+                        </div>
+                        <a href="${offer.link}" target="_blank" style="background: #2e7d32; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.85rem;">
+                            Ganar +$${roundReward(offer.payout)} COP
+                        </a>
+                    </div>
+                `;
+            });
+            html += "</div>";
+            container.innerHTML = html;
+        } else {
+            container.innerHTML =
+                '<p style="text-align: center; color: #555;">No hay ofertas disponibles para tu ubicación en este momento.</p>';
+        }
+    } catch (err) {
+        console.error("Error al cargar OGAds:", err);
+        container.innerHTML =
+            '<p style="text-align: center; color: #888;">Servicio de ofertas temporalmente no disponible.</p>';
+    }
+}
 
 // --- CARGA DEL OFFERWALL MONLIX ---
 function loadMonlixOfferwall(username = "demo_user") {
@@ -59,24 +119,11 @@ function loadMonlixOfferwall(username = "demo_user") {
     }
 }
 
-// --- SINCRONIZACIÓN DE SALDO REAL DESDE EL BACKEND ---
-async function syncBalanceWithBackend() {
-    try {
-        const response = await fetch(
-            `${API_BASE_URL}/user/balance?username=${userState.username}`
-        );
-        if (response.ok) {
-            const data = await response.json();
-            userState.balance = data.balance;
-            localStorage.setItem("inclusiwork_balance", data.balance);
-            actualizarInterfaz();
-        }
-    } catch (error) {
-        console.warn(
-            "[PWA] Servidor Backend offline/local. Usando caché local:",
-            error
-        );
-    }
+// --- CÁLCULO DE RECOMPENSA COP ---
+function roundReward(payoutUsd) {
+    const trm = 4000;
+    const margin = 0.8;
+    return Math.round(parseFloat(payoutUsd || 0) * trm * margin);
 }
 
 // --- ACTUALIZACIÓN DE UI ---
@@ -153,49 +200,4 @@ if ("serviceWorker" in navigator) {
                 console.error("Error al registrar el Service Worker:", err)
             );
     });
-}
-
-async function loadOgadsOffers() {
-    const container = document.getElementById("ogads-offerwall-container");
-    if (!container) return;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/offers/ogads`);
-        if (!response.ok) throw new Error("Error al obtener ofertas");
-
-        const data = await response.json();
-
-        if (data.offers && data.offers.length > 0) {
-            let html =
-                '<div style="display: flex; flex-direction: column; gap: 10px;">';
-            data.offers.forEach(offer => {
-                html += `
-                    <div style="border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>${offer.name_short || offer.name}</strong>
-                            <p style="font-size: 0.8rem; color: #555;">${offer.ad_description || ""}</p>
-                        </div>
-                        <a href="${offer.link}" target="_blank" style="background: #2e7d32; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.85rem;">
-                            Ganar +$${roundReward(offer.payout)} COP
-                        </a>
-                    </div>
-                `;
-            });
-            html += "</div>";
-            container.innerHTML = html;
-        } else {
-            container.innerHTML =
-                '<p style="text-align: center; color: #555;">No hay ofertas disponibles para tu ubicación en este momento.</p>';
-        }
-    } catch (err) {
-        console.error("Error al cargar OGAds:", err);
-        container.innerHTML =
-            '<p style="text-align: center; color: #888;">Servicio de ofertas temporalmente no disponible.</p>';
-    }
-}
-
-function roundReward(payoutUsd) {
-    const trm = 4000;
-    const margin = 0.8;
-    return Math.round(parseFloat(payoutUsd || 0) * trm * margin);
 }
