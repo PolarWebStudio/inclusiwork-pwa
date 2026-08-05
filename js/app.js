@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     actualizarInterfaz();
     syncBalanceWithBackend();
     loadOgadsOffers();
+loadMonlixOfferwall()
 
     // Iniciar con el Canal A por defecto
     if (typeof loadTaskChannel === "function") {
