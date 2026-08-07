@@ -20,7 +20,7 @@
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-size: 18px; /* Tamaño de letra aumentado para accesibilidad */
+    font-size: 18px;
     line-height: 1.5;
 }
 
@@ -65,26 +65,62 @@ body {
     padding: 1rem;
 }
 
+/* CARDS DE SALDO SEPARADAS */
+.wallet-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 1.2rem;
+}
+
 .wallet-card {
-    background: linear-gradient(135deg, #1a237e, #283593);
-    color: white;
     padding: 1.2rem;
     border-radius: var(--radius);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.2rem;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
 }
+
+.wallet-real {
+    background: linear-gradient(135deg, #1a237e, #283593);
+    color: white;
+}
+
+.wallet-practice {
+    background: linear-gradient(135deg, #37474f, #455a64);
+    color: white;
+}
+
+.badge-type {
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.badge-real { background: #2e7d32; color: #fff; }
+.badge-demo { background: #ff9800; color: #000; }
 
 .wallet-label {
     font-size: 0.85rem;
     opacity: 0.9;
 }
 
-#user-balance {
-    font-size: 1.6rem;
+#user-balance, #user-practice-balance {
+    font-size: 1.5rem;
     font-weight: bold;
+}
+
+#trm-indicator {
+    font-size: 0.75rem;
+    opacity: 0.85;
+    display: block;
+    margin-top: 2px;
 }
 
 .btn-withdraw {
@@ -128,29 +164,19 @@ body {
     background-color: #e8eaf6;
 }
 
-.chan-icon {
-    font-size: 1.8rem;
-}
-
-.chan-text strong {
-    display: block;
-    font-size: 0.95rem;
-}
-
-.chan-text small {
-    color: var(--subtext-color);
-    font-size: 0.8rem;
-}
+.chan-icon { font-size: 1.8rem; }
+.chan-text strong { display: block; font-size: 0.95rem; }
+.chan-text small { color: var(--subtext-color); font-size: 0.8rem; }
 
 .workspace-card {
     background: var(--card-bg);
     padding: 1.2rem;
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
-    min-height: 250px;
+    min-height: 200px;
 }
 
-/* Modal y Pasarela de Retiros */
+/* Modales */
 .modal {
     position: fixed;
     top: 0;
@@ -164,9 +190,7 @@ body {
     z-index: 1000;
 }
 
-.modal.hidden {
-    display: none;
-}
+.modal.hidden { display: none; }
 
 .modal-content {
     background: #ffffff;
@@ -175,7 +199,7 @@ body {
     width: 90%;
     max-width: 400px;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .pay-methods-grid {
@@ -193,12 +217,9 @@ body {
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.2s;
 }
 
-.pay-btn:hover {
-    background: #e2e8f0;
-}
+.pay-btn:hover { background: #e2e8f0; }
 
 .btn-close {
     background: #ef4444;
