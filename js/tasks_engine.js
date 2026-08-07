@@ -1,12 +1,10 @@
-// js/tasks_engine.js BASE DE DATOS DE TAREAS ---
 const taskDatabase = {
     api: [
         {
             id: 1,
             type: "image",
             prompt: "¿Hay un perro en esta imagen?",
-            content:
-                "https://images.unsplash.com/photo-1543466835-00a7907e9de1",
+            content: "https://images.unsplash.com/photo-1543466835-00a7907e9de1",
             reward: 250
         },
         {
@@ -20,8 +18,7 @@ const taskDatabase = {
             id: 3,
             type: "image",
             prompt: "¿Este vehículo es un camión?",
-            content:
-                "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7",
+            content: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7",
             reward: 300
         }
     ],
@@ -48,8 +45,7 @@ const taskDatabase = {
             id: 6,
             type: "audio",
             prompt: "Transcribe el total de la factura de audio",
-            content:
-                "El total de la compra en la ferretería es de cuarenta y cinco mil pesos.",
+            content: "El total de la compra en la ferretería es de cuarenta y cinco mil pesos.",
             reward: 1200
         },
         {
@@ -66,7 +62,6 @@ const taskDatabase = {
 let currentTaskIndex = 0;
 let currentChannel = "api";
 
-// --- CARGAR CANAL DE TAREAS ---
 function loadTaskChannel(channelId) {
     currentChannel = channelId;
     currentTaskIndex = 0;
@@ -74,14 +69,12 @@ function loadTaskChannel(channelId) {
     let mensaje = "";
     if (channelId === "api") mensaje = "Canal de Tareas Globales seleccionado.";
     if (channelId === "sdk") mensaje = "Canal de Ofertas Rápidas seleccionado.";
-    if (channelId === "b2b")
-        mensaje = "Canal de Empresas Locales seleccionado.";
+    if (channelId === "b2b") mensaje = "Canal de Empresas Locales seleccionado.";
 
-    leerTexto(mensaje);
+    if (typeof leerTexto === "function") leerTexto(mensaje);
     renderCurrentTask();
 }
 
-// --- RENDERIZAR TAREA ACTUAL ---
 function renderCurrentTask() {
     const workspace = document.getElementById("task-content");
     if (!workspace) return;
@@ -91,19 +84,19 @@ function renderCurrentTask() {
     if (currentTaskIndex >= tasks.length) {
         workspace.innerHTML = `
             <div style="text-align: center; padding: 2rem;">
-                <h3 style="color: #2e7d32;">¡No hay más tareas por ahora! 🎉</h3>
-                <p style="color: var(--subtext-color, #666);">Revisa más tarde o cambia de canal.</p>
+                <h3 style="color: #2e7d32;">¡Entrenamiento completado en este canal! 🎉</h3>
+                <p style="color: var(--subtext-color, #666);">Cambia de canal para practicar otras habilidades o realiza ofertas reales arriba.</p>
             </div>
         `;
-        leerTexto("No hay más tareas disponibles en este canal.");
+        if (typeof leerTexto === "function") leerTexto("Entrenamiento finalizado en este canal.");
         return;
     }
 
     const task = tasks[currentTaskIndex];
     let html = `
         <div style="margin-bottom: 15px;">
-            <span style="background: #e8eaf6; color: var(--primary, #1a237e); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
-                Recompensa: $${task.reward} COP
+            <span style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
+                Puntos DEMO: +${task.reward} pts
             </span>
         </div>
         <h3 style="margin-bottom: 15px;">${task.prompt}</h3>
@@ -144,15 +137,13 @@ function renderCurrentTask() {
     }
 
     workspace.innerHTML = html;
-    leerTexto(`${task.prompt}. Recompensa estimada: ${task.reward} pesos.`);
+    if (typeof leerTexto === "function") leerTexto(`${task.prompt}. Puntos de práctica: ${task.reward}.`);
 }
 
-// --- COMPLETAR TAREA Y REGISTRAR EN EL BACKEND ---
 async function completeTask(taskType, reward) {
     const workspace = document.getElementById("task-content");
     if (workspace) {
-        workspace.innerHTML =
-            '<p style="text-align: center; padding: 2rem;">Validando tarea con el servidor...</p>';
+        workspace.innerHTML = '<p style="text-align: center; padding: 2rem;">Validando ejercicio de práctica...</p>';
     }
 
     try {
@@ -168,24 +159,19 @@ async function completeTask(taskType, reward) {
 
         if (response.ok) {
             const data = await response.json();
-            userState.balance = data.new_balance;
-            localStorage.setItem("inclusiwork_balance", data.new_balance);
+            userState.practiceBalance = data.new_practice_balance;
+            localStorage.setItem("inclusiwork_practice_balance", data.new_practice_balance);
         } else {
-            // Fallback en caso de error del backend
-            userState.balance += reward;
-            localStorage.setItem("inclusiwork_balance", userState.balance);
+            userState.practiceBalance += reward;
+            localStorage.setItem("inclusiwork_practice_balance", userState.practiceBalance);
         }
     } catch (error) {
-        console.warn(
-            "[PWA] No se pudo conectar con la API, registrando en almacenamiento local:",
-            error
-        );
-        userState.balance += reward;
-        localStorage.setItem("inclusiwork_balance", userState.balance);
+        userState.practiceBalance += reward;
+        localStorage.setItem("inclusiwork_practice_balance", userState.practiceBalance);
     }
 
-    actualizarInterfaz();
-    leerTexto(`Tarea completada. Ganaste ${reward} pesos.`);
+    if (typeof actualizarInterfaz === "function") actualizarInterfaz();
+    if (typeof leerTexto === "function") leerTexto(`Ejercicio de práctica completado. Ganaste ${reward} puntos.`);
 
     currentTaskIndex++;
     setTimeout(() => {
@@ -193,7 +179,6 @@ async function completeTask(taskType, reward) {
     }, 400);
 }
 
-// Estilos dinámicos para los botones
 const style = document.createElement("style");
 style.innerHTML = `
     .btn-task {
