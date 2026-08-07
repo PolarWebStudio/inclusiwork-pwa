@@ -319,3 +319,47 @@ if ("serviceWorker" in navigator) {
             .catch(err => console.error("SW error:", err));
     });
 }
+
+// Función para renderizar el detalle de la tarea
+function renderTaskDetails(task) {
+    const container = document.getElementById("task-content");
+
+    container.innerHTML = `
+        <div class="task-detail-card">
+            <div class="task-header">
+                <h3 style="margin:0; color:#1a237e;">${task.titulo}</h3>
+                <span class="payout-tag">${task.pago}</span>
+            </div>
+            
+            <h4 class="section-title">🎯 Objetivo</h4>
+            <p style="font-size: 0.9rem; color:#444;">${task.objetivo}</p>
+            
+            <h4 class="section-title">📋 Pasos a seguir</h4>
+            <ul class="task-steps">
+                ${task.pasos.map(paso => `<li>${paso}</li>`).join("")}
+            </ul>
+
+            <button class="btn-start-task" onclick="window.open('${task.url}', '_blank')">
+                🚀 Iniciar Tarea
+            </button>
+        </div>
+    `;
+}
+
+// Ejemplo de cómo llamar a la función con los datos de una tarea:
+const tareaEjemplo = {
+    titulo: "Encuesta de Opinión Rápida",
+    pago: "$2.500 COP",
+    objetivo:
+        "Ayudar a una marca local a entender las preferencias de compra en Bogotá.",
+    pasos: [
+        "Haz clic en Iniciar Tarea.",
+        "Responde las 5 preguntas de selección múltiple.",
+        "Al finalizar, verás un mensaje de 'Completado'.",
+        "Regresa aquí y el saldo se acreditará en 15 min."
+    ],
+    url: "https://ejemplo-encuesta.com"
+};
+
+// Llamada de prueba:
+// renderTaskDetails(tareaEjemplo);
