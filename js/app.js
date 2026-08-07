@@ -7,7 +7,8 @@ const API_BASE_URL =
 const userState = {
     username: "demo_user",
     balance: parseFloat(localStorage.getItem("inclusiwork_balance")) || 0,
-    practiceBalance: parseFloat(localStorage.getItem("inclusiwork_practice_balance")) || 0,
+    practiceBalance:
+        parseFloat(localStorage.getItem("inclusiwork_practice_balance")) || 0,
     role: localStorage.getItem("inclusiwork_role") || "Operador",
     voiceEnabled: false
 };
@@ -20,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await fetchLiveTRM();
     actualizarInterfaz();
     syncBalanceWithBackend();
-    loadMonlixOfferwall();
+    loadMonlixOfferwall(userState.username);
     loadOgadsOffers();
 
     if (typeof loadTaskChannel === "function") {
@@ -76,10 +77,12 @@ async function loadOgadsOffers() {
             currentOgadsOffers = data.offers;
             renderOgadsOffers(currentOgadsOffers);
         } else {
-            container.innerHTML = '<p style="text-align: center; color: #555;">No hay ofertas disponibles para tu ubicación en este momento.</p>';
+            container.innerHTML =
+                '<p style="text-align: center; color: #555;">No hay ofertas disponibles para tu ubicación en este momento.</p>';
         }
     } catch (err) {
-        container.innerHTML = '<p style="text-align: center; color: #888;">Servicio de ofertas temporalmente no disponible.</p>';
+        container.innerHTML =
+            '<p style="text-align: center; color: #888;">Servicio de ofertas temporalmente no disponible.</p>';
     }
 }
 
@@ -87,10 +90,18 @@ function renderOgadsOffers(offers) {
     const container = document.getElementById("ogads-offerwall-container");
     if (!container) return;
 
-    let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+    let html =
+        '<div style="display: flex; flex-direction: column; gap: 10px;">';
     offers.forEach(offer => {
         const title = offer.translated_title || offer.name_short || offer.name;
         const desc = offer.translated_desc || offer.ad_description || "";
+
+        // Adjuntar subid del usuario para garantizar la atracibilidad del postback
+        let trackedLink = offer.link;
+        if (trackedLink) {
+            const separator = trackedLink.includes("?") ? "&" : "?";
+            trackedLink = `${trackedLink}${separator}subid=${encodeURIComponent(userState.username)}`;
+        }
 
         html += `
             <div style="border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #fff;">
@@ -98,7 +109,7 @@ function renderOgadsOffers(offers) {
                     <strong style="display: block; font-size: 0.92rem; color: #1a237e;">${title}</strong>
                     <p style="font-size: 0.8rem; color: #555; margin-top: 4px; line-height: 1.2;">${desc}</p>
                 </div>
-                <a href="${offer.link}" target="_blank" rel="noopener noreferrer" style="background: #2e7d32; color: white; padding: 10px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.85rem; text-align: center; flex-shrink: 0;">
+                <a href="${trackedLink}" target="_blank" rel="noopener noreferrer" style="background: #2e7d32; color: white; padding: 10px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.85rem; text-align: center; flex-shrink: 0;">
                     Ganar +$${roundReward(offer.payout)} COP
                 </a>
             </div>
@@ -123,14 +134,17 @@ async function toggleOgadsLanguage() {
     }
 
     if (selectedLang === "es") {
-        container.innerHTML = '<p style="text-align: center; color: #1a237e; padding: 1.5rem;">Traduciendo ofertas al español...</p>';
+        container.innerHTML =
+            '<p style="text-align: center; color: #1a237e; padding: 1.5rem;">Traduciendo ofertas al español...</p>';
 
         for (let offer of currentOgadsOffers) {
             const rawTitle = offer.name_short || offer.name;
             const rawDesc = offer.ad_description || "";
 
-            if (!offer.translated_title) offer.translated_title = await translateText(rawTitle, "es");
-            if (rawDesc && !offer.translated_desc) offer.translated_desc = await translateText(rawDesc, "es");
+            if (!offer.translated_title)
+                offer.translated_title = await translateText(rawTitle, "es");
+            if (rawDesc && !offer.translated_desc)
+                offer.translated_desc = await translateText(rawDesc, "es");
         }
         renderOgadsOffers(currentOgadsOffers);
     }
@@ -155,13 +169,18 @@ function roundReward(payoutUsd) {
 
 async function syncBalanceWithBackend() {
     try {
-        const response = await fetch(`${API_BASE_URL}/user/balance?username=${userState.username}`);
+        const response = await fetch(
+            `${API_BASE_URL}/user/balance?username=${userState.username}`
+        );
         if (response.ok) {
             const data = await response.json();
             userState.balance = data.balance;
             userState.practiceBalance = data.practice_balance;
             localStorage.setItem("inclusiwork_balance", data.balance);
-            localStorage.setItem("inclusiwork_practice_balance", data.practice_balance);
+            localStorage.setItem(
+                "inclusiwork_practice_balance",
+                data.practice_balance
+            );
             actualizarInterfaz();
         }
     } catch (error) {
@@ -223,13 +242,29 @@ function leerTexto(texto) {
 }
 
 function selectChannel(channelId) {
-    document.querySelectorAll(".channel-card").forEach(card => card.classList.remove("active"));
+    document
+        .querySelectorAll(".channel-card")
+        .forEach(card => card.classList.remove("active"));
     const targetCard = document.getElementById(`chan-${channelId}`);
     if (targetCard) targetCard.classList.add("active");
 
     if (typeof loadTaskChannel === "function") {
         loadTaskChannel(channelId);
     }
+}
+
+/* MODAL DE TÉRMINOS Y CONDICIONES */
+function openTermsModal() {
+    const modal = document.getElementById("terms-modal");
+    if (modal) {
+        modal.classList.remove("hidden");
+        leerTexto("Abriendo reglas y políticas de retiro.");
+    }
+}
+
+function closeTermsModal() {
+    const modal = document.getElementById("terms-modal");
+    if (modal) modal.classList.add("hidden");
 }
 
 /* SISTEMA DE RETIRO */
@@ -254,25 +289,33 @@ async function requestWithdrawal(method) {
         return;
     }
 
-    let accountInfo = prompt(`Estás solicitando un retiro vía ${method}.\nPor favor ingresa tu número de cuenta o celular:`);
+    let accountInfo = prompt(
+        `Estás solicitando un retiro vía ${method}.\nPor favor ingresa tu número de cuenta o celular:`
+    );
     if (!accountInfo || accountInfo.trim() === "") {
         alert("Operación cancelada.");
         return;
     }
 
-    const confirmacion = confirm(`¿Confirmas el retiro de $${userState.balance.toLocaleString("es-CO")} COP a ${method} (${accountInfo})?`);
+    const confirmacion = confirm(
+        `¿Confirmas el retiro de $${userState.balance.toLocaleString("es-CO")} COP a ${method} (${accountInfo})?`
+    );
     if (confirmacion) {
         const retiroMonto = userState.balance;
         userState.balance = 0;
         localStorage.setItem("inclusiwork_balance", userState.balance);
         actualizarInterfaz();
         closePaymentModal();
-        alert(`¡Solicitud de retiro enviada! $${retiroMonto.toLocaleString("es-CO")} COP procesados hacia ${method}.`);
+        alert(
+            `¡Solicitud de retiro enviada! $${retiroMonto.toLocaleString("es-CO")} COP procesados hacia ${method}.`
+        );
     }
 }
 
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch(err => console.error("SW error:", err));
+        navigator.serviceWorker
+            .register("./sw.js")
+            .catch(err => console.error("SW error:", err));
     });
 }
