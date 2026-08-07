@@ -1,12 +1,12 @@
 :root {
     --primary: #1a237e;
-    --primary-light: #534bae;
+    --primary-light: #283593;
     --accent: #2e7d32;
-    --bg-color: #f8f9fa;
+    --bg-color: #f4f6f9;
     --card-bg: #ffffff;
-    --text-color: #111111;
+    --text-dark: #1f2937;
     --subtext-color: #555555;
-    --border-color: #d1d5db;
+    --border-color: #e5e7eb;
     --radius: 12px;
 }
 
@@ -14,34 +14,51 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
 }
 
 body {
     background-color: var(--bg-color);
-    color: var(--text-color);
-    font-size: 18px;
+    color: var(--text-dark);
+    font-size: 16px;
     line-height: 1.5;
 }
 
-.navbar {
+/* Header / Navbar */
+.navbar,
+.encabezado {
     background-color: var(--primary);
-    color: white;
-    padding: 1rem;
+    color: #ffffff;
+    padding: 0.85rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-.logo-area h1 {
-    font-size: 1.4rem;
+.logo-area h1,
+.encabezado h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
 }
 
 .role-badge {
     font-size: 0.75rem;
-    background: var(--primary-light);
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: 12px;
+    margin-left: 4px;
+    font-weight: normal;
 }
 
 .actions-area {
@@ -49,101 +66,200 @@ body {
     gap: 8px;
 }
 
-.icon-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    font-size: 1.2rem;
-    padding: 8px;
-    border-radius: 50%;
+.icon-btn,
+.boton-navegacion {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    border-radius: 8px;
     cursor: pointer;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.container {
+/* Layout Principal */
+.container,
+.contenedor {
     max-width: 600px;
     margin: 0 auto;
-    padding: 1rem;
+    padding: 1rem 0.85rem;
 }
 
-/* CARDS DE SALDO SEPARADAS */
+/* Wallets / Tarjetas de Saldo - REPARADO CONTRASTE */
 .wallet-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.25rem;
 }
 
 .wallet-card {
-    padding: 1.2rem;
+    padding: 1.25rem;
     border-radius: var(--radius);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+/* Billetera Real (Azul Oscuro) */
 .wallet-real {
-    background: linear-gradient(135deg, #1a237e, #283593);
-    color: white;
+    background: #1a237e;
+    color: #ffffff !important;
 }
 
-.wallet-practice {
-    background: linear-gradient(135deg, #37474f, #455a64);
-    color: white;
-}
-
-.badge-type {
-    font-size: 0.65rem;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-    display: inline-block;
-    margin-bottom: 4px;
-}
-
-.badge-real { background: #2e7d32; color: #fff; }
-.badge-demo { background: #ff9800; color: #000; }
-
-.wallet-label {
+.wallet-real .wallet-label {
+    color: rgba(255, 255, 255, 0.85) !important;
     font-size: 0.85rem;
-    opacity: 0.9;
 }
 
-#user-balance, #user-practice-balance {
-    font-size: 1.5rem;
-    font-weight: bold;
+.wallet-real h2 {
+    color: #ffffff !important;
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 4px 0;
+    border: none;
+    padding: 0;
 }
 
-#trm-indicator {
-    font-size: 0.75rem;
-    opacity: 0.85;
-    display: block;
-    margin-top: 2px;
+.wallet-real #trm-indicator {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 4px;
+    margin-top: 4px;
+    display: inline-block;
+}
+
+/* Billetera Práctica (Gris Oscuro) */
+.wallet-practice {
+    background: #37474f;
+    color: #ffffff !important;
+}
+
+.wallet-practice .wallet-label {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 0.85rem;
+}
+
+.wallet-practice h2 {
+    color: #4fc3f7 !important; /* Azul claro brillante para los puntos */
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 4px 0;
+    border: none;
+    padding: 0;
+}
+
+.wallet-practice small {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 0.8rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 4px;
+    margin-top: 4px;
+    display: inline-block;
+}
+
+/* Badges */
+.badge-type {
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+
+.badge-real {
+    background: #2e7d32;
+    color: #ffffff;
+}
+.badge-demo {
+    background: #ff9800;
+    color: #000000;
 }
 
 .btn-withdraw {
-    background-color: var(--accent);
-    color: white;
+    background-color: #2e7d32;
+    color: #ffffff;
     border: none;
     padding: 10px 16px;
     border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.95rem;
+    font-weight: 700;
+    font-size: 0.9rem;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.channels-section h3 {
+/* Tarjetas Generales y Secciones */
+.workspace-card,
+.tarjeta-seccion {
+    background: var(--card-bg);
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Restablecer estilos de títulos en tarjetas de contenido */
+.workspace-card h2,
+.workspace-card h3,
+.tarjeta-seccion h2,
+.tarjeta-seccion h3 {
+    color: var(--primary);
+}
+
+.workspace-card h2,
+.tarjeta-seccion h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid #e8eaf6;
+    padding-bottom: 6px;
+}
+
+.workspace-card h3,
+.tarjeta-seccion h3 {
     font-size: 1rem;
-    margin-bottom: 0.8rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
+p,
+li {
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    line-height: 1.5;
+}
+
+/* Estilo botón Reglas & Pagos (Restaura el aspecto azul claro original) */
+.btn-rules-link {
+    background-color: #e8eaf6;
+    color: #1a237e;
+    border: 1px solid #c5cae9;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Canales de Práctica */
 .channels-grid {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-bottom: 1.2rem;
+    margin-top: 0.75rem;
 }
 
 .channel-card {
@@ -152,11 +268,10 @@ body {
     gap: 12px;
     padding: 12px;
     background: var(--card-bg);
-    border: 2px solid var(--border-color);
+    border: 1.5px solid var(--border-color);
     border-radius: var(--radius);
     text-align: left;
     cursor: pointer;
-    transition: all 0.2s;
 }
 
 .channel-card.active {
@@ -164,19 +279,20 @@ body {
     background-color: #e8eaf6;
 }
 
-.chan-icon { font-size: 1.8rem; }
-.chan-text strong { display: block; font-size: 0.95rem; }
-.chan-text small { color: var(--subtext-color); font-size: 0.8rem; }
-
-.workspace-card {
-    background: var(--card-bg);
-    padding: 1.2rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--border-color);
-    min-height: 200px;
+.chan-icon {
+    font-size: 1.6rem;
+}
+.chan-text strong {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--primary);
+}
+.chan-text small {
+    color: var(--subtext-color);
+    font-size: 0.8rem;
 }
 
-/* Modales */
+/* Modal */
 .modal {
     position: fixed;
     top: 0;
@@ -188,25 +304,27 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 1rem;
 }
 
-.modal.hidden { display: none; }
+.modal.hidden {
+    display: none;
+}
 
 .modal-content {
     background: #ffffff;
-    padding: 25px;
+    padding: 1.5rem;
     border-radius: var(--radius);
-    width: 90%;
-    max-width: 400px;
+    width: 100%;
+    max-width: 380px;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .pay-methods-grid {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin: 20px 0;
+    margin: 1.25rem 0;
 }
 
 .pay-btn {
@@ -214,12 +332,10 @@ body {
     border: 1px solid var(--border-color);
     background: #f8f9fa;
     border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
 }
-
-.pay-btn:hover { background: #e2e8f0; }
 
 .btn-close {
     background: #ef4444;
@@ -228,4 +344,5 @@ body {
     padding: 10px 20px;
     border-radius: 6px;
     cursor: pointer;
+    font-weight: 600;
 }
