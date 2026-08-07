@@ -28,7 +28,7 @@ def init_db():
     try:
         cursor.execute("ALTER TABLE users ADD COLUMN practice_balance REAL DEFAULT 0.0")
     except sqlite3.OperationalError:
-        pass # La columna ya existe
+        pass  # La columna ya existe
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS task_logs (
@@ -76,7 +76,9 @@ def get_balance():
             "role": row[2]
         }), 200
 
-    return jsonify({"error": "Usuario no encontrado"}), 404
+    return jsonify({
+        "error": "Usuario no encontrado"
+    }), 404
 
 # ==========================================
 # ENDPOINT PARA TAREAS SIMULADAS / PRÁCTICA
@@ -106,12 +108,14 @@ def complete_task():
             conn.close()
 
             return jsonify({
-                "status": "success", 
+                "status": "success",
                 "new_practice_balance": new_practice_balance
             }), 200
 
         conn.close()
-        return jsonify({"error": "Usuario no encontrado"}), 404
+        return jsonify({
+            "error": "Usuario no encontrado"
+        }), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -124,7 +128,9 @@ def get_ogads_offers():
     api_key = os.environ.get('OGADS_API_KEY', OGADS_API_KEY)
 
     if not api_key:
-        return jsonify({"error": "Falta la variable de entorno OGADS_API_KEY"}), 500
+        return jsonify({
+            "error": "Falta la variable de entorno OGADS_API_KEY"
+        }), 500
 
     user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if user_ip and ',' in user_ip:
@@ -133,8 +139,13 @@ def get_ogads_offers():
     user_agent = request.headers.get('User-Agent', '')
 
     url = "https://appsave.online/api/v2"
-    headers = {"Authorization": f"Bearer {api_key}"}
-    params = {"ip": user_ip, "user_agent": user_agent}
+    headers = {
+        "Authorization": f"Bearer {api_key}"
+    }
+    params = {
+        "ip": user_ip, 
+        "user_agent": user_agent
+    }
 
     try:
         response = requests.get(url, headers=headers, params=params, timeout=10)
@@ -147,7 +158,10 @@ def get_ogads_offers():
                 "details": response.text
             }), response.status_code
     except Exception as e:
-        return jsonify({"error": "No se pudieron obtener las ofertas", "details": str(e)}), 500
+        return jsonify({
+            "error": "No se pudieron obtener las ofertas", 
+            "details": str(e)
+        }), 500
 
 # ==========================================
 # WEBHOOK PARA RECIBIR NOTIFICACIONES REALES (OGADS)
@@ -156,7 +170,8 @@ def get_ogads_offers():
 def ogads_webhook():
     try:
         data = request.args if request.method == 'GET' else (request.get_json() or {})
-        username = data.get('userId', 'demo_user')
+        # Captura el usuario desde subid, aff_sub o userId
+        username = data.get('subid') or data.get('aff_sub') or data.get('userId') or 'demo_user'
         reward_usd = float(data.get('payout', 0))
 
         if reward_usd > 0:
