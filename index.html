@@ -21,14 +21,16 @@
                     class="icon-btn"
                     title="Lector de Voz"
                     aria-label="Activar lector de voz"
-                >🔊</button>
+                    >🔊</button
+                >
                 <button
                     id="btn-role"
                     onclick="switchUserRole()"
                     class="icon-btn"
                     title="Cambiar Modo de Usuario"
                     aria-label="Cambiar modo entre Operador y Tutor"
-                >⚙️</button>
+                    >⚙️</button
+                >
             </div>
         </header>
 
@@ -43,90 +45,193 @@
                         <h2 id="user-balance">$0.00 COP</h2>
                         <small id="trm-indicator">Cargando TRM...</small>
                     </div>
-                    <button class="btn-withdraw" onclick="openPaymentModal()">💸 Retirar</button>
+                    <button class="btn-withdraw" onclick="openPaymentModal()"
+                        >💸 Retirar</button
+                    >
                 </div>
 
                 <!-- Saldo de Práctica -->
                 <div class="wallet-card wallet-practice">
                     <div class="wallet-info">
-                        <span class="badge-type badge-demo">🎓 ENTRENAMIENTO</span>
+                        <span class="badge-type badge-demo"
+                            >🎓 ENTRENAMIENTO</span
+                        >
                         <p class="wallet-label">Puntos de Práctica</p>
                         <h2 id="user-practice-balance">0 pts</h2>
-                        <small>Puntos de tareas simuladas (No retirables)</small>
+                        <small
+                            >Puntos de tareas simuladas (No retirables)</small
+                        >
                     </div>
                 </div>
             </section>
 
             <!-- Muro de Ofertas Reales (OGAds) -->
             <section style="margin-top: 1.5rem" class="workspace-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 8px;">
-                    <h3 style="color: #1a237e; margin: 0;">🔥 Muro de Ofertas Reales (OGAds)</h3>
-                    <select id="ogads-lang-select" onchange="toggleOgadsLanguage()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 0.85rem; background: #fff; cursor: pointer;">
-                        <option value="original">🌐 Idioma Original</option>
-                        <option value="es">🇪🇸 Traducir a Español</option>
-                    </select>
+                <div
+                    style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 0.5rem;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                    "
+                >
+                    <h3 style="color: #1a237e; margin: 0"
+                        >🔥 Muro de Ofertas Reales (OGAds)</h3
+                    >
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button 
+                            onclick="openTermsModal()" 
+                            style="padding: 6px 10px; border-radius: 6px; border: 1px solid #1a237e; background: #e8eaf6; color: #1a237e; font-size: 0.85rem; font-weight: bold; cursor: pointer;"
+                        >
+                            📜 Reglas & Pagos
+                        </button>
+                        <select
+                            id="ogads-lang-select"
+                            onchange="toggleOgadsLanguage()"
+                            style="
+                                padding: 6px 10px;
+                                border-radius: 6px;
+                                border: 1px solid #ccc;
+                                font-size: 0.85rem;
+                                background: #fff;
+                                cursor: pointer;
+                            "
+                        >
+                            <option value="original">🌐 Idioma Original</option>
+                            <option value="es">🇪🇸 Traducir a Español</option>
+                        </select>
+                    </div>
                 </div>
-                <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem">
-                    Completa estas ofertas verificadas para abonar ganancias reales a tu cuenta en tiempo real. Los pagos se calculan automáticamente según la TRM del dólar.
-                </p>
 
-                <div id="ogads-offerwall-container" style="width: 100%; min-height: 200px">
-                    <p style="text-align: center; color: #666; padding: 2rem">Cargando ofertas en tiempo real...</p>
+                <!-- Banner Informativo de Tiempos y Proceso -->
+                <div style="background: #fff3cd; border-left: 4px solid #ffc107; color: #856404; padding: 10px 12px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 1rem;">
+                    <strong>🕒 ¿Cómo se acreditan tus ganancias?</strong>
+                    <ul style="margin: 4px 0 0 16px; padding: 0;">
+                        <li>Descarga la app o cumple el requisito exacto indicado por la oferta.</li>
+                        <li>El anunciante valida la conversión en un lapso de <strong>15 minutos a 24 horas</strong>.</li>
+                        <li>Una vez validado, tu saldo real se actualizará automáticamente.</li>
+                    </ul>
+                </div>
+
+                <div
+                    id="ogads-offerwall-container"
+                    style="width: 100%; min-height: 200px"
+                >
+                    <p style="text-align: center; color: #666; padding: 2rem"
+                        >Cargando ofertas en tiempo real...</p
+                    >
                 </div>
             </section>
 
             <!-- Muro de Ofertas Monlix -->
             <section style="margin-top: 1.5rem" class="workspace-card">
-                <h3 style="margin-bottom: 0.5rem; color: #1a237e">⏳ Muro de Ofertas Monlix (En Verificación)</h3>
+                <h3 style="margin-bottom: 0.5rem; color: #1a237e"
+                    >⏳ Muro de Ofertas Monlix (En Verificación)</h3
+                >
                 <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem">
-                    Esta red publicitaria secundaria se activará automáticamente al recibir la validación de cuenta.
+                    Esta red publicitaria secundaria se activará automáticamente
+                    al recibir la validación de cuenta.
                 </p>
 
-                <div id="monlix-offerwall-container" style="width: 100%; min-height: 150px">
-                    <p style="text-align: center; color: #666; padding: 2rem">Cargando muro de Monlix...</p>
+                <div
+                    id="monlix-offerwall-container"
+                    style="width: 100%; min-height: 150px"
+                >
+                    <p style="text-align: center; color: #666; padding: 2rem"
+                        >Cargando muro de Monlix...</p
+                    >
                 </div>
             </section>
 
             <!-- Selector de Canales de Práctica / Demostración -->
-            <section class="channels-section" style="margin-top: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <h3 style="margin: 0;">💡 Módulo de Entrenamiento (Tareas Simuladas)</h3>
-                    <span style="background: #e0e0e0; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; font-weight: bold; color: #444;">DEMO</span>
+            <section class="channels-section" style="margin-top: 1.5rem">
+                <div
+                    style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 0.5rem;
+                    "
+                >
+                    <h3 style="margin: 0"
+                        >💡 Módulo de Entrenamiento (Tareas Simuladas)</h3
+                    >
+                    <span
+                        style="
+                            background: #e0e0e0;
+                            font-size: 0.75rem;
+                            padding: 2px 8px;
+                            border-radius: 4px;
+                            font-weight: bold;
+                            color: #444;
+                        "
+                        >DEMO</span
+                    >
                 </div>
-                <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem;">
-                    Practica tus habilidades con estas tareas simuladas antes de trabajar en las campañas comerciales.
+                <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem">
+                    Practica tus habilidades con estas tareas simuladas antes de
+                    trabajar en las campañas comerciales.
                 </p>
                 <div class="channels-grid">
-                    <button class="channel-card active" onclick="selectChannel('api')" id="chan-api">
+                    <button
+                        class="channel-card active"
+                        onclick="selectChannel('api')"
+                        id="chan-api"
+                    >
                         <span class="chan-icon">🌐</span>
                         <div class="chan-text">
                             <strong>Canal A: Tareas Globales</strong>
-                            <small>Clasificación de imágenes y audios simples (Demo)</small>
+                            <small
+                                >Clasificación de imágenes y audios simples
+                                (Demo)</small
+                            >
                         </div>
                     </button>
 
-                    <button class="channel-card" onclick="selectChannel('sdk')" id="chan-sdk">
+                    <button
+                        class="channel-card"
+                        onclick="selectChannel('sdk')"
+                        id="chan-sdk"
+                    >
                         <span class="chan-icon">⭐</span>
                         <div class="chan-text">
                             <strong>Canal B: Ofertas Rápidas</strong>
-                            <small>Validación de encuestas y revisión corta (Demo)</small>
+                            <small
+                                >Validación de encuestas y revisión corta
+                                (Demo)</small
+                            >
                         </div>
                     </button>
 
-                    <button class="channel-card" onclick="selectChannel('b2b')" id="chan-b2b">
+                    <button
+                        class="channel-card"
+                        onclick="selectChannel('b2b')"
+                        id="chan-b2b"
+                    >
                         <span class="chan-icon">🇨🇴</span>
                         <div class="chan-text">
                             <strong>Canal C: Empresas Locales</strong>
-                            <small>Transcripción y verificación de negocios (Demo)</small>
+                            <small
+                                >Transcripción y verificación de negocios
+                                (Demo)</small
+                            >
                         </div>
                     </button>
                 </div>
             </section>
 
             <!-- Área Dinámica de Práctica -->
-            <section id="task-workspace" class="workspace-card" style="margin-top: 1rem;">
+            <section
+                id="task-workspace"
+                class="workspace-card"
+                style="margin-top: 1rem"
+            >
                 <div id="task-content">
-                    <p style="text-align: center; color: var(--subtext-color)">Cargando espacio de práctica...</p>
+                    <p style="text-align: center; color: var(--subtext-color)"
+                        >Cargando espacio de práctica...</p
+                    >
                 </div>
             </section>
         </main>
@@ -137,15 +242,52 @@
                 <h3>Retirar mis Ganancias</h3>
                 <p>Selecciona tu billetera o método de pago local:</p>
                 <div class="pay-methods-grid">
-                    <button class="pay-btn" onclick="requestWithdrawal('Nequi')">📱 Nequi</button>
-                    <button class="pay-btn" onclick="requestWithdrawal('Daviplata')">🔴 Daviplata</button>
-                    <button class="pay-btn" onclick="requestWithdrawal('Binance')">🟡 Binance Pay</button>
+                    <button class="pay-btn" onclick="requestWithdrawal('Nequi')"
+                        >📱 Nequi</button
+                    >
+                    <button
+                        class="pay-btn"
+                        onclick="requestWithdrawal('Daviplata')"
+                        >🔴 Daviplata</button
+                    >
+                    <button
+                        class="pay-btn"
+                        onclick="requestWithdrawal('Binance')"
+                        >🟡 Binance Pay</button
+                    >
                 </div>
-                <button class="btn-close" onclick="closePaymentModal()">Cerrar</button>
+                <button class="btn-close" onclick="closePaymentModal()"
+                    >Cerrar</button
+                >
             </div>
         </div>
 
-        <script src="js/app.js?v=1.1"></script>
+        <!-- Modal de Términos y Condiciones / Políticas de Retiro -->
+        <div id="terms-modal" class="modal hidden">
+            <div class="modal-content" style="max-width: 500px; text-align: left;">
+                <h3 style="color: #1a237e; margin-bottom: 0.5rem;">📜 Reglas y Políticas de Retiro</h3>
+                <div style="max-height: 300px; overflow-y: auto; font-size: 0.85rem; color: #333; line-height: 1.4; padding-right: 8px;">
+                    <h4 style="margin: 8px 0 4px; color: #1a237e;">1. Acreditación de Ganancias</h4>
+                    <p>Las ofertas reales son patrocinadas por anunciantes de redes asociadas (como OGAds y Monlix). InclusiWork valida el saldo automáticamente a través de sistemas informáticos (Webhooks) al recibir la confirmación de la marca.</p>
+
+                    <h4 style="margin: 8px 0 4px; color: #1a237e;">2. Tiempos de Reflejo</h4>
+                    <p>Descargar una app o completar una encuesta puede tardar entre <strong>15 minutos y 24 horas</strong> en ser procesado por los servidores del anunciante. Recomendamos mantener la app instalada y usarla durante al menos 2 minutos tras la descarga.</p>
+
+                    <h4 style="margin: 8px 0 4px; color: #1a237e;">3. Condiciones de Retiro</h4>
+                    <ul>
+                        <li><strong>Monto mínimo de retiro:</strong> $10.000,00 COP.</li>
+                        <li><strong>Medios de pago:</strong> Nequi, Daviplata y Binance Pay.</li>
+                        <li><strong>Tiempo de procesamiento:</strong> Los retiros solicitados se transfieren manualmente en un plazo de 24 a 48 horas hábiles tras la verificación de seguridad.</li>
+                    </ul>
+
+                    <h4 style="margin: 8px 0 4px; color: #1a237e;">4. Políticas Antifraude</h4>
+                    <p>Queda estrictamente prohibido el uso de VPNs, proxies, emuladores o automatizaciones. Cualquier comportamiento sospechoso causará la cancelación del saldo y la suspensión permanente del operador.</p>
+                </div>
+                <button class="btn-close" onclick="closeTermsModal()" style="margin-top: 1rem; width: 100%; padding: 10px; background: #1a237e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Entendido</button>
+            </div>
+        </div>
+
+        <script src="js/app.js?v=1.2"></script>
         <script src="js/tasks_engine.js?v=1.1"></script>
     </body>
 </html>
