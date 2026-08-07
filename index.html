@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#1a237e" />
         <title>InclusiWork - Microtareas e Ingresos</title>
-        <link rel="stylesheet" href="css/styles.css?v=1.0" />
+        <link rel="stylesheet" href="css/styles.css?v=1.1" />
         <link rel="manifest" href="manifest.json" />
     </head>
     <body>
@@ -33,92 +33,105 @@
         </header>
 
         <main class="container">
-            <!-- Balance y Resumen de Ganancias -->
-            <section class="wallet-card">
-                <div class="wallet-info">
-                    <p class="wallet-label">Mi Saldo Disponible</p>
-                    <h2 id="user-balance">$0.00 COP</h2>
+            <!-- Balances Diferenciados -->
+            <section class="wallet-container">
+                <!-- Saldo Real -->
+                <div class="wallet-card wallet-real">
+                    <div class="wallet-info">
+                        <span class="badge-type badge-real">💰 REAL</span>
+                        <p class="wallet-label">Mi Saldo Convertible</p>
+                        <h2 id="user-balance">$0.00 COP</h2>
+                        <small id="trm-indicator">Cargando TRM...</small>
+                    </div>
+                    <button class="btn-withdraw" onclick="openPaymentModal()">💸 Retirar</button>
                 </div>
-                <button class="btn-withdraw" onclick="openPaymentModal()">💸 Retirar</button>
-            </section>
 
-            <!-- Selector de Canal de Tareas (3 Vías) -->
-            <section class="channels-section">
-                <h3>Selecciona cómo deseas generar ingresos hoy:</h3>
-                <div class="channels-grid">
-                    <button
-                        class="channel-card active"
-                        onclick="selectChannel('api')"
-                        id="chan-api"
-                    >
-                        <span class="chan-icon">🌐</span>
-                        <div class="chan-text">
-                            <strong>Canal A: Tareas Globales</strong>
-                            <small>Clasificación de imágenes y audios simples (APIs)</small>
-                        </div>
-                    </button>
-
-                    <button
-                        class="channel-card"
-                        onclick="selectChannel('sdk')"
-                        id="chan-sdk"
-                    >
-                        <span class="chan-icon">⭐</span>
-                        <div class="chan-text">
-                            <strong>Canal B: Ofertas Rápidas</strong>
-                            <small>Validación de encuestas y revisión corta (SDKs)</small>
-                        </div>
-                    </button>
-
-                    <button
-                        class="channel-card"
-                        onclick="selectChannel('b2b')"
-                        id="chan-b2b"
-                    >
-                        <span class="chan-icon">🇨🇴</span>
-                        <div class="chan-text">
-                            <strong>Canal C: Empresas Locales</strong>
-                            <small>Transcripción y verificación de negocios en Colombia</small>
-                        </div>
-                    </button>
+                <!-- Saldo de Práctica -->
+                <div class="wallet-card wallet-practice">
+                    <div class="wallet-info">
+                        <span class="badge-type badge-demo">🎓 ENTRENAMIENTO</span>
+                        <p class="wallet-label">Puntos de Práctica</p>
+                        <h2 id="user-practice-balance">0 pts</h2>
+                        <small>Puntos de tareas simuladas (No retirables)</small>
+                    </div>
                 </div>
             </section>
 
-            <!-- Área Dinámica donde se cargan las Microtareas -->
-            <section id="task-workspace" class="workspace-card">
-                <div id="task-content">
-                    <p style="text-align: center; color: var(--subtext-color)">Cargando microtareas accesibles...</p>
-                </div>
-            </section>
-
-            <!-- Sección de Ofertas Monlix -->
+            <!-- Muro de Ofertas Reales (OGAds) -->
             <section style="margin-top: 1.5rem" class="workspace-card">
-                <h3 style="margin-bottom: 0.5rem; color: #1a237e">Muro de Ofertas Monlix</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 8px;">
+                    <h3 style="color: #1a237e; margin: 0;">🔥 Muro de Ofertas Reales (OGAds)</h3>
+                    <select id="ogads-lang-select" onchange="toggleOgadsLanguage()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 0.85rem; background: #fff; cursor: pointer;">
+                        <option value="original">🌐 Idioma Original</option>
+                        <option value="es">🇪🇸 Traducir a Español</option>
+                    </select>
+                </div>
                 <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem">
-                    Completa encuestas y juegos recomendados para sumar más saldo en COP.
+                    Completa estas ofertas verificadas para abonar ganancias reales a tu cuenta en tiempo real. Los pagos se calculan automáticamente según la TRM del dólar.
                 </p>
 
-                <!-- Contenedor dinámico para Monlix -->
-                <div id="monlix-offerwall-container" style="width: 100%; min-height: 250px">
+                <div id="ogads-offerwall-container" style="width: 100%; min-height: 200px">
+                    <p style="text-align: center; color: #666; padding: 2rem">Cargando ofertas en tiempo real...</p>
+                </div>
+            </section>
+
+            <!-- Muro de Ofertas Monlix -->
+            <section style="margin-top: 1.5rem" class="workspace-card">
+                <h3 style="margin-bottom: 0.5rem; color: #1a237e">⏳ Muro de Ofertas Monlix (En Verificación)</h3>
+                <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem">
+                    Esta red publicitaria secundaria se activará automáticamente al recibir la validación de cuenta.
+                </p>
+
+                <div id="monlix-offerwall-container" style="width: 100%; min-height: 150px">
                     <p style="text-align: center; color: #666; padding: 2rem">Cargando muro de Monlix...</p>
                 </div>
             </section>
 
-            <!-- Sección de Ofertas OGAds -->
-            <section style="margin-top: 1.5rem" class="workspace-card">
-                <h3 style="margin-bottom: 0.5rem; color: #1a237e">Muro de Tareas y Encuestas Destacadas de OGAds.</h3>
-                <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem">
-                    Completa las ofertas disponibles para sumar saldo a tu cuenta en tiempo real.
+            <!-- Selector de Canales de Práctica / Demostración -->
+            <section class="channels-section" style="margin-top: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h3 style="margin: 0;">💡 Módulo de Entrenamiento (Tareas Simuladas)</h3>
+                    <span style="background: #e0e0e0; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; font-weight: bold; color: #444;">DEMO</span>
+                </div>
+                <p style="font-size: 0.85rem; color: #555; margin-bottom: 1rem;">
+                    Practica tus habilidades con estas tareas simuladas antes de trabajar en las campañas comerciales.
                 </p>
+                <div class="channels-grid">
+                    <button class="channel-card active" onclick="selectChannel('api')" id="chan-api">
+                        <span class="chan-icon">🌐</span>
+                        <div class="chan-text">
+                            <strong>Canal A: Tareas Globales</strong>
+                            <small>Clasificación de imágenes y audios simples (Demo)</small>
+                        </div>
+                    </button>
 
-                <!-- Contenedor dinámico para OGAds -->
-                <div id="ogads-offerwall-container" style="width: 100%; min-height: 250px">
-                    <p style="text-align: center; color: #666; padding: 2rem">Cargando ofertas disponibles...</p>
+                    <button class="channel-card" onclick="selectChannel('sdk')" id="chan-sdk">
+                        <span class="chan-icon">⭐</span>
+                        <div class="chan-text">
+                            <strong>Canal B: Ofertas Rápidas</strong>
+                            <small>Validación de encuestas y revisión corta (Demo)</small>
+                        </div>
+                    </button>
+
+                    <button class="channel-card" onclick="selectChannel('b2b')" id="chan-b2b">
+                        <span class="chan-icon">🇨🇴</span>
+                        <div class="chan-text">
+                            <strong>Canal C: Empresas Locales</strong>
+                            <small>Transcripción y verificación de negocios (Demo)</small>
+                        </div>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Área Dinámica de Práctica -->
+            <section id="task-workspace" class="workspace-card" style="margin-top: 1rem;">
+                <div id="task-content">
+                    <p style="text-align: center; color: var(--subtext-color)">Cargando espacio de práctica...</p>
                 </div>
             </section>
         </main>
 
-        <!-- Modal de Retiro / Saldo -->
+        <!-- Modal de Retiro -->
         <div id="payment-modal" class="modal hidden">
             <div class="modal-content">
                 <h3>Retirar mis Ganancias</h3>
@@ -132,8 +145,7 @@
             </div>
         </div>
 
-        <script src="js/app.js"></script>
-        <script src="js/tasks_engine.js"></script>
-        <script src="js/payments.js"></script>
+        <script src="js/app.js?v=1.1"></script>
+        <script src="js/tasks_engine.js?v=1.1"></script>
     </body>
 </html>
