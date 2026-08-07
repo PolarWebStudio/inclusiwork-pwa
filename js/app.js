@@ -1,52 +1,68 @@
-// --- CONFIGURACIÓN DE LA API BACKEND ---
 const API_BASE_URL =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1"
         ? "http://127.0.0.1:5000/api"
-        : "https://inclusiwork-api.onrender.com/api"; // <-- URL lista para Render
+        : "https://inclusiwork-api.onrender.com/api";
 
-// --- ESTADO GLOBAL DEL USUARIO ---
 const userState = {
     username: "demo_user",
     balance: parseFloat(localStorage.getItem("inclusiwork_balance")) || 0,
-    role: localStorage.getItem("inclusiwork_role") || "Operador", // 'Operador' o 'Tutor'
+    practiceBalance: parseFloat(localStorage.getItem("inclusiwork_practice_balance")) || 0,
+    role: localStorage.getItem("inclusiwork_role") || "Operador",
     voiceEnabled: false
 };
 
-// --- INICIALIZACIÓN UNIFICADA ---
-document.addEventListener("DOMContentLoaded", () => {
+let currentOgadsOffers = [];
+let currentTRM = 4000;
+const MIN_WITHDRAWAL = 10000;
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await fetchLiveTRM();
     actualizarInterfaz();
     syncBalanceWithBackend();
-    loadOgadsOffers();
     loadMonlixOfferwall();
+    loadOgadsOffers();
 
-    // Iniciar con el Canal A por defecto
     if (typeof loadTaskChannel === "function") {
         loadTaskChannel("api");
     }
 });
 
-// --- SINCRONIZACIÓN DE SALDO REAL DESDE EL BACKEND ---
-async function syncBalanceWithBackend() {
+async function fetchLiveTRM() {
     try {
-        const response = await fetch(
-            `${API_BASE_URL}/user/balance?username=${userState.username}`
-        );
+        const response = await fetch("https://open.er-api.com/v6/latest/USD");
         if (response.ok) {
             const data = await response.json();
-            userState.balance = data.balance;
-            localStorage.setItem("inclusiwork_balance", data.balance);
-            actualizarInterfaz();
+            if (data && data.rates && data.rates.COP) {
+                currentTRM = Math.round(data.rates.COP);
+            }
         }
-    } catch (error) {
-        console.warn(
-            "[PWA] Servidor Backend offline/local. Usando caché local:",
-            error
-        );
+    } catch (e) {
+        console.warn("[InclusiWork] Usando TRM de respaldo:", e);
     }
 }
 
-// --- CARGA DE OFERTAS OGADS ---
+function loadMonlixOfferwall(username = "demo_user") {
+    const MONLIX_APP_ID = "AQUÍ_VA_TU_APP_ID";
+    const container = document.getElementById("monlix-offerwall-container");
+    if (!container) return;
+
+    if (MONLIX_APP_ID === "AQUÍ_VA_TU_APP_ID") {
+        container.innerHTML = `
+      <div style="text-align: center; padding: 1.5rem 1rem; color: #555;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏳</div>
+        <h4 style="margin-bottom: 0.5rem; color: #1a237e;">Muro en Proceso de Verificación</h4>
+        <p style="max-width: 400px; margin: 0 auto; font-size: 0.85rem;">
+          Estamos validando las credenciales de la red. Muy pronto podrás completar ofertas y sumar más saldo COP real.
+        </p>
+      </div>
+    `;
+    } else {
+        const offerwallUrl = `https://offerwall.monlix.com/tag/${MONLIX_APP_ID}?userId=${encodeURIComponent(username)}`;
+        container.innerHTML = `<iframe src="${offerwallUrl}" style="width: 100%; height: 500px; border: none;" title="Monlix Offerwall"></iframe>`;
+    }
+}
+
 async function loadOgadsOffers() {
     const container = document.getElementById("ogads-offerwall-container");
     if (!container) return;
@@ -56,81 +72,117 @@ async function loadOgadsOffers() {
         if (!response.ok) throw new Error("Error al obtener ofertas");
 
         const data = await response.json();
-
         if (data.offers && data.offers.length > 0) {
-            let html =
-                '<div style="display: flex; flex-direction: column; gap: 10px;">';
-            data.offers.forEach(offer => {
-                html += `
-                    <div style="border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong>${offer.name_short || offer.name}</strong>
-                            <p style="font-size: 0.8rem; color: #555;">${offer.ad_description || ""}</p>
-                        </div>
-                        <a href="${offer.link}" target="_blank" style="background: #2e7d32; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.85rem;">
-                            Ganar +$${roundReward(offer.payout)} COP
-                        </a>
-                    </div>
-                `;
-            });
-            html += "</div>";
-            container.innerHTML = html;
+            currentOgadsOffers = data.offers;
+            renderOgadsOffers(currentOgadsOffers);
         } else {
-            container.innerHTML =
-                '<p style="text-align: center; color: #555;">No hay ofertas disponibles para tu ubicación en este momento.</p>';
+            container.innerHTML = '<p style="text-align: center; color: #555;">No hay ofertas disponibles para tu ubicación en este momento.</p>';
         }
     } catch (err) {
-        console.error("Error al cargar OGAds:", err);
-        container.innerHTML =
-            '<p style="text-align: center; color: #888;">Servicio de ofertas temporalmente no disponible.</p>';
+        container.innerHTML = '<p style="text-align: center; color: #888;">Servicio de ofertas temporalmente no disponible.</p>';
     }
 }
 
-// --- CARGA DEL OFFERWALL MONLIX ---
-function loadMonlixOfferwall(username = "demo_user") {
-    // Cuando te llegue el correo, reemplazas esto por tu ID real (ej: "65f8a9...")
-    const MONLIX_APP_ID = "AQUÍ_VA_TU_APP_ID";
-
-    const container = document.getElementById("monlix-offerwall-container");
-
+function renderOgadsOffers(offers) {
+    const container = document.getElementById("ogads-offerwall-container");
     if (!container) return;
 
-    // Si aún no hemos puesto la App ID real, mostramos una tarjeta limpia
-    if (MONLIX_APP_ID === "AQUÍ_VA_TU_APP_ID") {
-        container.innerHTML = `
-      <div style="text-align: center; padding: 3rem 1rem; color: #555;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
-        <h3 style="margin-bottom: 0.5rem; color: #1a237e;">Muro en Proceso de Verificación</h3>
-        <p style="max-width: 400px; margin: 0 auto; font-size: 0.95rem;">
-          Estamos validando las credenciales de la red publicitaria. Muy pronto podrás completar ofertas y sumar más saldo COP.
-        </p>
-      </div>
-    `;
-    } else {
-        // Cuando pongas tu ID real, inserta el iframe automáticamente
-        const offerwallUrl = `https://offerwall.monlix.com/tag/${MONLIX_APP_ID}?userId=${encodeURIComponent(username)}`;
-        container.innerHTML = `
-      <iframe 
-        src="${offerwallUrl}" 
-        style="width: 100%; height: 600px; border: none;" 
-        title="Monlix Offerwall">
-      </iframe>
-    `;
+    let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+    offers.forEach(offer => {
+        const title = offer.translated_title || offer.name_short || offer.name;
+        const desc = offer.translated_desc || offer.ad_description || "";
+
+        html += `
+            <div style="border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #fff;">
+                <div style="flex: 1;">
+                    <strong style="display: block; font-size: 0.92rem; color: #1a237e;">${title}</strong>
+                    <p style="font-size: 0.8rem; color: #555; margin-top: 4px; line-height: 1.2;">${desc}</p>
+                </div>
+                <a href="${offer.link}" target="_blank" rel="noopener noreferrer" style="background: #2e7d32; color: white; padding: 10px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.85rem; text-align: center; flex-shrink: 0;">
+                    Ganar +$${roundReward(offer.payout)} COP
+                </a>
+            </div>
+        `;
+    });
+    html += "</div>";
+    container.innerHTML = html;
+}
+
+async function toggleOgadsLanguage() {
+    const langSelect = document.getElementById("ogads-lang-select");
+    const selectedLang = langSelect ? langSelect.value : "original";
+    const container = document.getElementById("ogads-offerwall-container");
+
+    if (selectedLang === "original") {
+        currentOgadsOffers.forEach(offer => {
+            delete offer.translated_title;
+            delete offer.translated_desc;
+        });
+        renderOgadsOffers(currentOgadsOffers);
+        return;
+    }
+
+    if (selectedLang === "es") {
+        container.innerHTML = '<p style="text-align: center; color: #1a237e; padding: 1.5rem;">Traduciendo ofertas al español...</p>';
+
+        for (let offer of currentOgadsOffers) {
+            const rawTitle = offer.name_short || offer.name;
+            const rawDesc = offer.ad_description || "";
+
+            if (!offer.translated_title) offer.translated_title = await translateText(rawTitle, "es");
+            if (rawDesc && !offer.translated_desc) offer.translated_desc = await translateText(rawDesc, "es");
+        }
+        renderOgadsOffers(currentOgadsOffers);
     }
 }
 
-// --- CÁLCULO DE RECOMPENSA COP ---
-function roundReward(payoutUsd) {
-    const trm = 4000;
-    const margin = 0.8;
-    return Math.round(parseFloat(payoutUsd || 0) * trm * margin);
+async function translateText(text, targetLang = "es") {
+    if (!text || text.trim() === "") return text;
+    try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        return data[0].map(item => item[0]).join("");
+    } catch (e) {
+        return text;
+    }
 }
 
-// --- ACTUALIZACIÓN DE UI ---
+function roundReward(payoutUsd) {
+    const margin = 0.8;
+    return Math.round(parseFloat(payoutUsd || 0) * currentTRM * margin);
+}
+
+async function syncBalanceWithBackend() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/user/balance?username=${userState.username}`);
+        if (response.ok) {
+            const data = await response.json();
+            userState.balance = data.balance;
+            userState.practiceBalance = data.practice_balance;
+            localStorage.setItem("inclusiwork_balance", data.balance);
+            localStorage.setItem("inclusiwork_practice_balance", data.practice_balance);
+            actualizarInterfaz();
+        }
+    } catch (error) {
+        console.warn("[PWA] Servidor Offline. Usando caché local:", error);
+    }
+}
+
 function actualizarInterfaz() {
     const balanceEl = document.getElementById("user-balance");
     if (balanceEl) {
         balanceEl.textContent = `$${userState.balance.toLocaleString("es-CO", { minimumFractionDigits: 2 })} COP`;
+    }
+
+    const practiceEl = document.getElementById("user-practice-balance");
+    if (practiceEl) {
+        practiceEl.textContent = `${userState.practiceBalance.toLocaleString("es-CO")} pts`;
+    }
+
+    const trmEl = document.getElementById("trm-indicator");
+    if (trmEl) {
+        trmEl.textContent = `1 USD ≈ $${currentTRM.toLocaleString("es-CO")} COP`;
     }
 
     const roleEl = document.getElementById("role-indicator");
@@ -139,18 +191,15 @@ function actualizarInterfaz() {
     }
 }
 
-// --- CAMBIO DE ROL (TUTOR / OPERADOR) ---
 function switchUserRole() {
     userState.role = userState.role === "Operador" ? "Tutor" : "Operador";
     localStorage.setItem("inclusiwork_role", userState.role);
     actualizarInterfaz();
-
-    const mensaje = `Modo cambiado a ${userState.role}. ${userState.role === "Tutor" ? "Ahora puedes asignar y supervisar tareas." : "Ahora puedes realizar tareas y generar ingresos."}`;
+    const mensaje = `Modo cambiado a ${userState.role}.`;
     alert(mensaje);
     leerTexto(mensaje);
 }
 
-// --- LECTOR DE VOZ (ACCESIBILIDAD) ---
 function toggleVoiceAssist() {
     userState.voiceEnabled = !userState.voiceEnabled;
     const btn = document.getElementById("btn-voice");
@@ -166,7 +215,6 @@ function toggleVoiceAssist() {
 
 function leerTexto(texto) {
     if (!userState.voiceEnabled || !("speechSynthesis" in window)) return;
-
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(texto);
     utterance.lang = "es-CO";
@@ -174,12 +222,8 @@ function leerTexto(texto) {
     window.speechSynthesis.speak(utterance);
 }
 
-// --- SELECTOR DE CANALES ---
 function selectChannel(channelId) {
-    document
-        .querySelectorAll(".channel-card")
-        .forEach(card => card.classList.remove("active"));
-
+    document.querySelectorAll(".channel-card").forEach(card => card.classList.remove("active"));
     const targetCard = document.getElementById(`chan-${channelId}`);
     if (targetCard) targetCard.classList.add("active");
 
@@ -188,16 +232,47 @@ function selectChannel(channelId) {
     }
 }
 
-// --- REGISTRO DEL SERVICE WORKER (PWA) ---
+/* SISTEMA DE RETIRO */
+function openPaymentModal() {
+    const modal = document.getElementById("payment-modal");
+    if (modal) {
+        modal.classList.remove("hidden");
+        leerTexto("Abriendo ventana de retiros.");
+    }
+}
+
+function closePaymentModal() {
+    const modal = document.getElementById("payment-modal");
+    if (modal) modal.classList.add("hidden");
+}
+
+async function requestWithdrawal(method) {
+    if (userState.balance < MIN_WITHDRAWAL) {
+        const errorMsg = `Saldo insuficiente. El monto mínimo para retirar es de $${MIN_WITHDRAWAL.toLocaleString("es-CO")} COP.`;
+        alert(errorMsg);
+        leerTexto(errorMsg);
+        return;
+    }
+
+    let accountInfo = prompt(`Estás solicitando un retiro vía ${method}.\nPor favor ingresa tu número de cuenta o celular:`);
+    if (!accountInfo || accountInfo.trim() === "") {
+        alert("Operación cancelada.");
+        return;
+    }
+
+    const confirmacion = confirm(`¿Confirmas el retiro de $${userState.balance.toLocaleString("es-CO")} COP a ${method} (${accountInfo})?`);
+    if (confirmacion) {
+        const retiroMonto = userState.balance;
+        userState.balance = 0;
+        localStorage.setItem("inclusiwork_balance", userState.balance);
+        actualizarInterfaz();
+        closePaymentModal();
+        alert(`¡Solicitud de retiro enviada! $${retiroMonto.toLocaleString("es-CO")} COP procesados hacia ${method}.`);
+    }
+}
+
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-        navigator.serviceWorker
-            .register("./sw.js")
-            .then(reg =>
-                console.log("Service Worker registrado con éxito:", reg.scope)
-            )
-            .catch(err =>
-                console.error("Error al registrar el Service Worker:", err)
-            );
+        navigator.serviceWorker.register("./sw.js").catch(err => console.error("SW error:", err));
     });
 }
