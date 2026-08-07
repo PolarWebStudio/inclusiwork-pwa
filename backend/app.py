@@ -19,9 +19,16 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             role TEXT DEFAULT 'Operador',
-            balance REAL DEFAULT 0.0
+            balance REAL DEFAULT 0.0,
+            practice_balance REAL DEFAULT 0.0
         )
     ''')
+
+    # Migración en caso de que la tabla ya existiera sin la columna practice_balance
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN practice_balance REAL DEFAULT 0.0")
+    except sqlite3.OperationalError:
+        pass # La columna ya existe
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS task_logs (
@@ -29,6 +36,7 @@ def init_db():
             user_id INTEGER,
             task_type TEXT,
             reward REAL,
+            is_practice INTEGER DEFAULT 0,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
@@ -36,12 +44,11 @@ def init_db():
 
     cursor.execute("SELECT * FROM users WHERE username = 'demo_user'")
     if not cursor.fetchone():
-        cursor.execute("INSERT INTO users (username, role, balance) VALUES ('demo_user', 'Operador', 0.0)")
+        cursor.execute("INSERT INTO users (username, role, balance, practice_balance) VALUES ('demo_user', 'Operador', 0.0, 0.0)")
 
     conn.commit()
     conn.close()
 
-# Inicializar Base de Datos al arrancar
 init_db()
 
 @app.route('/api/health', methods=['GET'])
@@ -57,7 +64,7 @@ def get_balance():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT balance, role FROM users WHERE username = ?", (username,))
+    cursor.execute("SELECT balance, practice_balance, role FROM users WHERE username = ?", (username,))
     row = cursor.fetchone()
     conn.close()
 
@@ -65,13 +72,14 @@ def get_balance():
         return jsonify({
             "username": username,
             "balance": row[0],
-            "role": row[1]
+            "practice_balance": row[1],
+            "role": row[2]
         }), 200
 
     return jsonify({"error": "Usuario no encontrado"}), 404
 
 # ==========================================
-# ENDPOINT PARA COMPLETAR TAREAS MANUALES
+# ENDPOINT PARA TAREAS SIMULADAS / PRÁCTICA
 # ==========================================
 @app.route('/api/tasks/complete', methods=['POST'])
 def complete_task():
@@ -84,20 +92,23 @@ def complete_task():
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id, balance FROM users WHERE username = ?", (username,))
+        cursor.execute("SELECT id, practice_balance FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
 
         if user:
-            user_id, current_balance = user
-            new_balance = current_balance + reward
+            user_id, current_practice = user
+            new_practice_balance = current_practice + reward
 
-            cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
-            cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
+            cursor.execute("UPDATE users SET practice_balance = ? WHERE id = ?", (new_practice_balance, user_id))
+            cursor.execute("INSERT INTO task_logs (user_id, task_type, reward, is_practice) VALUES (?, ?, ?, 1)",
                            (user_id, task_type, reward))
             conn.commit()
             conn.close()
 
-            return jsonify({"status": "success", "new_balance": new_balance}), 200
+            return jsonify({
+                "status": "success", 
+                "new_practice_balance": new_practice_balance
+            }), 200
 
         conn.close()
         return jsonify({"error": "Usuario no encontrado"}), 404
@@ -111,11 +122,10 @@ def complete_task():
 @app.route('/api/offers/ogads', methods=['GET'])
 def get_ogads_offers():
     api_key = os.environ.get('OGADS_API_KEY', OGADS_API_KEY)
-    
+
     if not api_key:
         return jsonify({"error": "Falta la variable de entorno OGADS_API_KEY"}), 500
 
-    # Obtener IP real del cliente detrás del proxy/load balancer de Render
     user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if user_ip and ',' in user_ip:
         user_ip = user_ip.split(',')[0].strip()
@@ -123,17 +133,11 @@ def get_ogads_offers():
     user_agent = request.headers.get('User-Agent', '')
 
     url = "https://appsave.online/api/v2"
-    headers = {
-        "Authorization": f"Bearer {api_key}"
-    }
-    params = {
-        "ip": user_ip,
-        "user_agent": user_agent
-    }
+    headers = {"Authorization": f"Bearer {api_key}"}
+    params = {"ip": user_ip, "user_agent": user_agent}
 
     try:
         response = requests.get(url, headers=headers, params=params, timeout=10)
-        
         if response.status_code == 200:
             return jsonify(response.json()), 200
         else:
@@ -142,21 +146,16 @@ def get_ogads_offers():
                 "status_code": response.status_code,
                 "details": response.text
             }), response.status_code
-
     except Exception as e:
-        return jsonify({
-            "error": "No se pudieron obtener las ofertas",
-            "details": str(e)
-        }), 500
+        return jsonify({"error": "No se pudieron obtener las ofertas", "details": str(e)}), 500
 
 # ==========================================
-# WEBHOOK PARA RECIBIR NOTIFICACIONES DE OGADS
+# WEBHOOK PARA RECIBIR NOTIFICACIONES REALES (OGADS)
 # ==========================================
 @app.route('/api/webhooks/ogads', methods=['GET', 'POST'])
 def ogads_webhook():
     try:
         data = request.args if request.method == 'GET' else (request.get_json() or {})
-
         username = data.get('userId', 'demo_user')
         reward_usd = float(data.get('payout', 0))
 
@@ -176,7 +175,7 @@ def ogads_webhook():
                 new_balance = current_balance + cop_reward
 
                 cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
-                cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
+                cursor.execute("INSERT INTO task_logs (user_id, task_type, reward, is_practice) VALUES (?, ?, ?, 0)",
                                (user_id, 'OGAds Offerwall', cop_reward))
                 conn.commit()
 
@@ -184,19 +183,17 @@ def ogads_webhook():
             return "OK", 200
 
         return "Ignored payout", 200
-
     except Exception as e:
         print(f"Error en Webhook OGAds: {e}")
         return "Error", 400
 
 # ==========================================
-# WEBHOOK MONLIX EXISTENTE
+# WEBHOOK MONLIX
 # ==========================================
 @app.route('/api/webhooks/monlix', methods=['GET', 'POST'])
 def monlix_webhook():
     try:
         data = request.args if request.method == 'GET' else (request.get_json() or {})
-
         username = data.get('userId', 'demo_user')
         reward_usd = float(data.get('reward', 0))
         status = str(data.get('status', ''))
@@ -217,7 +214,7 @@ def monlix_webhook():
                 new_balance = current_balance + cop_reward
 
                 cursor.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
-                cursor.execute("INSERT INTO task_logs (user_id, task_type, reward) VALUES (?, ?, ?)",
+                cursor.execute("INSERT INTO task_logs (user_id, task_type, reward, is_practice) VALUES (?, ?, ?, 0)",
                                (user_id, 'Monlix Offerwall', cop_reward))
                 conn.commit()
 
@@ -225,7 +222,6 @@ def monlix_webhook():
             return "OK", 200
 
         return "Ignored status", 200
-
     except Exception as e:
         print(f"Error en Webhook Monlix: {e}")
         return "Error", 400
