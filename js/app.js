@@ -92,28 +92,41 @@ function renderOgadsOffers(offers) {
 
     if (!offers || offers.length === 0) {
         container.innerHTML =
-            '<p style="text-align: center; color: #555; padding: 1rem;">No hay ofertas disponibles.</p>';
+            '<p style="text-align: center; color: #555; padding: 1.5rem;">No hay aplicaciones disponibles para tu dispositivo en este momento.</p>';
         return;
     }
 
-    let html =
-        '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    let html = '<div style="display: flex; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box;">';
     offers.forEach(offer => {
         const title = offer.translated_title || offer.name_short || offer.name;
 
-        // Extraer la descripción o instrucción exacta desde cualquier propiedad enviada por la API
-        const descRaw =
+        // Limpieza profunda de texto excesivo o metadatos
+        let rawDesc =
             offer.translated_desc ||
             offer.ad_description ||
             offer.instructions ||
             offer.description ||
             offer.requirements ||
             "";
-        const desc = descRaw
-            ? descRaw
-            : "Instala y abre la aplicación para recibir la recompensa.";
 
-        // Adjuntar subid del usuario
+        // Si contiene metadatos técnicos de OGAds, extraer solo la instrucción relevante
+        if (rawDesc.includes("Conversion:") || rawDesc.includes("offerwall_instructions=")) {
+            const match = rawDesc.match(/Conversion:([^\n]+)/i) || rawDesc.match(/offerwall_instructions='([^']+)'/i);
+            if (match && match[1]) {
+                rawDesc = match[1].trim();
+            } else {
+                rawDesc = "Instala la aplicación y ábrela para acreditar tu saldo.";
+            }
+        }
+
+        // Truncar descripciones extensas
+        if (rawDesc.length > 180) {
+            rawDesc = rawDesc.substring(0, 180) + "...";
+        }
+
+        const desc = rawDesc ? rawDesc : "Instala y prueba la aplicación para recibir la recompensa.";
+
+        // SubID de seguimiento
         let trackedLink = offer.link;
         if (trackedLink) {
             const separator = trackedLink.includes("?") ? "&" : "?";
@@ -121,17 +134,19 @@ function renderOgadsOffers(offers) {
         }
 
         html += `
-            <div style="border: 1px solid #d1d5db; padding: 14px; border-radius: 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; background: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
-                <div style="flex: 1;">
-                    <strong style="display: block; font-size: 0.95rem; color: #1a237e; font-weight: 700;">${title}</strong>
-                    <div style="margin-top: 6px; padding: 6px 8px; background: #f0f4f8; border-left: 3px solid #1a237e; border-radius: 4px;">
-                        <span style="display: block; font-size: 0.75rem; color: #1a237e; font-weight: bold; text-transform: uppercase;">¿Qué debes hacer?</span>
-                        <p style="font-size: 0.82rem; color: #374151; margin-top: 2px; line-height: 1.35;">${desc}</p>
+            <div style="border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px; display: flex; flex-direction: column; gap: 10px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); box-sizing: border-box; width: 100%;">
+                <div style="width: 100%;">
+                    <strong style="display: block; font-size: 0.95rem; color: #1a237e; font-weight: 700; word-break: break-word;">${title}</strong>
+                    <div style="margin-top: 6px; padding: 8px; background: #f8fafc; border-left: 3px solid #1a237e; border-radius: 4px;">
+                        <span style="display: block; font-size: 0.7rem; color: #1a237e; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">¿Qué debes hacer?</span>
+                        <p style="font-size: 0.8rem; color: #475569; margin-top: 3px; line-height: 1.35; word-break: break-word;">${desc}</p>
                     </div>
                 </div>
-                <a href="${trackedLink}" target="_blank" rel="noopener noreferrer" style="background: #2e7d32; color: white; padding: 10px 14px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.85rem; text-align: center; flex-shrink: 0; align-self: center; box-shadow: 0 2px 4px rgba(46,125,50,0.2);">
-                    Ganar +$${roundReward(offer.payout)} COP
-                </a>
+                <div style="display: flex; justify-content: flex-end; width: 100%; margin-top: 2px;">
+                    <a href="${trackedLink}" target="_blank" rel="noopener noreferrer" style="background: #2e7d32; color: #ffffff; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.85rem; text-align: center; width: 100%; box-sizing: border-box; box-shadow: 0 2px 4px rgba(46,125,50,0.2);">
+                        Ganar +$${roundReward(offer.payout)} COP
+                    </a>
+                </div>
             </div>
         `;
     });
