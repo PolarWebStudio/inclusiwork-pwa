@@ -10,17 +10,18 @@
     --radius: 12px;
 }
 
-* {
-    box-sizing: border-box;
+/* Control general de viewport y resets anti-desbordamiento */
+html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
     margin: 0;
     padding: 0;
-    font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        sans-serif;
+    box-sizing: border-box;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
 }
 
 body {
@@ -28,6 +29,13 @@ body {
     color: var(--text-dark);
     font-size: 16px;
     line-height: 1.5;
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
 }
 
 /* Header / Navbar */
@@ -86,11 +94,12 @@ body {
 .container,
 .contenedor {
     max-width: 600px;
+    width: 100%;
     margin: 0 auto;
     padding: 1rem 0.85rem;
 }
 
-/* Wallets / Tarjetas de Saldo - REPARADO CONTRASTE */
+/* Wallets / Tarjetas de Saldo */
 .wallet-container {
     display: flex;
     flex-direction: column;
@@ -148,7 +157,7 @@ body {
 }
 
 .wallet-practice h2 {
-    color: #4fc3f7 !important; /* Azul claro brillante para los puntos */
+    color: #4fc3f7 !important;
     font-size: 1.75rem;
     font-weight: 800;
     margin: 4px 0;
@@ -208,7 +217,6 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-/* Restablecer estilos de títulos en tarjetas de contenido */
 .workspace-card h2,
 .workspace-card h3,
 .tarjeta-seccion h2,
@@ -239,7 +247,15 @@ li {
     line-height: 1.5;
 }
 
-/* Estilo botón Reglas & Pagos (Restaura el aspecto azul claro original) */
+/* Contenedor principal de ofertas responsive */
+#ogads-offerwall-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* Estilo botón Reglas & Pagos */
 .btn-rules-link {
     background-color: #e8eaf6;
     color: #1a237e;
