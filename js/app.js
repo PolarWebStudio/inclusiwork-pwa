@@ -78,11 +78,11 @@ async function loadOgadsOffers() {
             renderOgadsOffers(currentOgadsOffers);
         } else {
             container.innerHTML =
-                '<p style="text-align: center; color: #555;">No hay ofertas disponibles para tu ubicación en este momento.</p>';
+                '<p style="text-align: center; color: #555; padding: 1rem;">No hay ofertas de aplicaciones disponibles para tu ubicación en este momento.</p>';
         }
     } catch (err) {
         container.innerHTML =
-            '<p style="text-align: center; color: #888;">Servicio de ofertas temporalmente no disponible.</p>';
+            '<p style="text-align: center; color: #888; padding: 1rem;">Servicio de ofertas temporalmente no disponible.</p>';
     }
 }
 
@@ -90,13 +90,30 @@ function renderOgadsOffers(offers) {
     const container = document.getElementById("ogads-offerwall-container");
     if (!container) return;
 
+    if (!offers || offers.length === 0) {
+        container.innerHTML =
+            '<p style="text-align: center; color: #555; padding: 1rem;">No hay ofertas disponibles.</p>';
+        return;
+    }
+
     let html =
-        '<div style="display: flex; flex-direction: column; gap: 10px;">';
+        '<div style="display: flex; flex-direction: column; gap: 12px;">';
     offers.forEach(offer => {
         const title = offer.translated_title || offer.name_short || offer.name;
-        const desc = offer.translated_desc || offer.ad_description || "";
 
-        // Adjuntar subid del usuario para garantizar la atracibilidad del postback
+        // Extraer la descripción o instrucción exacta desde cualquier propiedad enviada por la API
+        const descRaw =
+            offer.translated_desc ||
+            offer.ad_description ||
+            offer.instructions ||
+            offer.description ||
+            offer.requirements ||
+            "";
+        const desc = descRaw
+            ? descRaw
+            : "Instala y abre la aplicación para recibir la recompensa.";
+
+        // Adjuntar subid del usuario
         let trackedLink = offer.link;
         if (trackedLink) {
             const separator = trackedLink.includes("?") ? "&" : "?";
@@ -104,12 +121,15 @@ function renderOgadsOffers(offers) {
         }
 
         html += `
-            <div style="border: 1px solid #d1d5db; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #fff;">
+            <div style="border: 1px solid #d1d5db; padding: 14px; border-radius: 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; background: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
                 <div style="flex: 1;">
-                    <strong style="display: block; font-size: 0.92rem; color: #1a237e;">${title}</strong>
-                    <p style="font-size: 0.8rem; color: #555; margin-top: 4px; line-height: 1.2;">${desc}</p>
+                    <strong style="display: block; font-size: 0.95rem; color: #1a237e; font-weight: 700;">${title}</strong>
+                    <div style="margin-top: 6px; padding: 6px 8px; background: #f0f4f8; border-left: 3px solid #1a237e; border-radius: 4px;">
+                        <span style="display: block; font-size: 0.75rem; color: #1a237e; font-weight: bold; text-transform: uppercase;">¿Qué debes hacer?</span>
+                        <p style="font-size: 0.82rem; color: #374151; margin-top: 2px; line-height: 1.35;">${desc}</p>
+                    </div>
                 </div>
-                <a href="${trackedLink}" target="_blank" rel="noopener noreferrer" style="background: #2e7d32; color: white; padding: 10px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.85rem; text-align: center; flex-shrink: 0;">
+                <a href="${trackedLink}" target="_blank" rel="noopener noreferrer" style="background: #2e7d32; color: white; padding: 10px 14px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.85rem; text-align: center; flex-shrink: 0; align-self: center; box-shadow: 0 2px 4px rgba(46,125,50,0.2);">
                     Ganar +$${roundReward(offer.payout)} COP
                 </a>
             </div>
@@ -135,11 +155,15 @@ async function toggleOgadsLanguage() {
 
     if (selectedLang === "es") {
         container.innerHTML =
-            '<p style="text-align: center; color: #1a237e; padding: 1.5rem;">Traduciendo ofertas al español...</p>';
+            '<p style="text-align: center; color: #1a237e; padding: 1.5rem;">Traduciendo ofertas e instrucciones...</p>';
 
         for (let offer of currentOgadsOffers) {
             const rawTitle = offer.name_short || offer.name;
-            const rawDesc = offer.ad_description || "";
+            const rawDesc =
+                offer.ad_description ||
+                offer.instructions ||
+                offer.description ||
+                "";
 
             if (!offer.translated_title)
                 offer.translated_title = await translateText(rawTitle, "es");
@@ -319,47 +343,3 @@ if ("serviceWorker" in navigator) {
             .catch(err => console.error("SW error:", err));
     });
 }
-
-// Función para renderizar el detalle de la tarea
-function renderTaskDetails(task) {
-    const container = document.getElementById("task-content");
-
-    container.innerHTML = `
-        <div class="task-detail-card">
-            <div class="task-header">
-                <h3 style="margin:0; color:#1a237e;">${task.titulo}</h3>
-                <span class="payout-tag">${task.pago}</span>
-            </div>
-            
-            <h4 class="section-title">🎯 Objetivo</h4>
-            <p style="font-size: 0.9rem; color:#444;">${task.objetivo}</p>
-            
-            <h4 class="section-title">📋 Pasos a seguir</h4>
-            <ul class="task-steps">
-                ${task.pasos.map(paso => `<li>${paso}</li>`).join("")}
-            </ul>
-
-            <button class="btn-start-task" onclick="window.open('${task.url}', '_blank')">
-                🚀 Iniciar Tarea
-            </button>
-        </div>
-    `;
-}
-
-// Ejemplo de cómo llamar a la función con los datos de una tarea:
-const tareaEjemplo = {
-    titulo: "Encuesta de Opinión Rápida",
-    pago: "$2.500 COP",
-    objetivo:
-        "Ayudar a una marca local a entender las preferencias de compra en Bogotá.",
-    pasos: [
-        "Haz clic en Iniciar Tarea.",
-        "Responde las 5 preguntas de selección múltiple.",
-        "Al finalizar, verás un mensaje de 'Completado'.",
-        "Regresa aquí y el saldo se acreditará en 15 min."
-    ],
-    url: "https://ejemplo-encuesta.com"
-};
-
-// Llamada de prueba:
-// renderTaskDetails(tareaEjemplo);
